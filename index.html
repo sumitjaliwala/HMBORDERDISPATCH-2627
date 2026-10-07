@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HMB — Order to Dispatch Tracker</title>
+<style>
+  :root{
+    --bg:#f4f7f5;
+    --card:#ffffff;
+    --text:#13241d;
+    --muted:#6b7c74;
+    --line:#e3eae6;
+    --green:#0f766e;
+    --green-d:#0c5e57;
+    --gold:#c79a2e;
+    --gold-d:#a17e1f;
+    --danger:#dc2626;
+    --warn:#d97706;
+    --ok:#16a34a;
+    --blue:#2563eb;
+    --shadow:0 8px 22px rgba(15,40,30,.08);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text);-webkit-text-size-adjust:100%}
+  header{
+    background:linear-gradient(135deg,var(--green),#0b4a44);
+    color:#fff;padding:16px 14px;position:sticky;top:0;z-index:30;
+    box-shadow:0 6px 20px rgba(0,0,0,.16);
+    border-bottom:3px solid var(--gold);
+  }
+  .head-inner{max-width:1240px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .brand h1{margin:0;font-size:20px;letter-spacing:.3px}
+  .brand h1 span{color:var(--gold)}
+  .brand p{margin:4px 0 0;color:#cdebe5;font-size:12.5px}
+  .head-actions{display:flex;gap:7px;flex-wrap:wrap}
+  button,.btn{border:0;padding:9px 12px;border-radius:11px;cursor:pointer;font-weight:700;font-size:13px;background:#e6fffb;color:#0c4a44;transition:.15s}
+  button:hover,.btn:hover{filter:brightness(.97);transform:translateY(-1px)}
+  button.primary{background:var(--green);color:#fff}
+  button.gold{background:var(--gold);color:#3a2c05}
+  button.dark{background:#10231d;color:#fff}
+  button.ghost{background:#eef2f0;color:#384c44}
+  button.danger{background:#fee2e2;color:#991b1b}
+  button.wa{background:#25d366;color:#06351a}
+  button.mail{background:#e0ecff;color:#1e3a8a}
+  button.small{padding:6px 9px;font-size:12px;border-radius:9px}
+  button.icon{padding:6px 8px;background:#eef2f0;color:#13241d;font-size:14px}
+  main{max-width:1240px;margin:14px auto 70px;padding:0 12px}
+  .tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{background:#fff;border:1px solid var(--line);color:#33453d;box-shadow:0 2px 8px rgba(15,40,30,.04);padding:10px 13px}
+  .tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px;margin-bottom:14px}
+  .card h2,.card h3{margin:0 0 12px}
+  .row-between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  label{font-size:12px;font-weight:800;color:#33453d;display:block;margin-bottom:5px}
+  input,select,textarea{width:100%;border:1px solid #cdd8d3;background:#fff;padding:10px 11px;border-radius:11px;outline:none;font-size:14px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,118,110,.13)}
+  textarea{min-height:64px;resize:vertical}
+  .form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+  .span2{grid-column:span 2}.span4{grid-column:span 4}
+  .stat-bar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 13px;box-shadow:var(--shadow);border-top:3px solid var(--line)}
+  .stat .s-label{font-size:12px;color:var(--muted)}
+  .stat .s-val{font-size:22px;font-weight:800;margin-top:3px}
+  .stat.green{border-top-color:var(--green)} .stat.green .s-val{color:var(--green)}
+  .stat.gold{border-top-color:var(--gold)} .stat.gold .s-val{color:var(--gold-d)}
+  .stat.blue{border-top-color:var(--blue)} .stat.blue .s-val{color:var(--blue)}
+  .stat.ok{border-top-color:var(--ok)} .stat.ok .s-val{color:var(--ok)}
+  .stat.warn{border-top-color:var(--warn)} .stat.warn .s-val{color:var(--warn)}
+  .pay-banner{background:linear-gradient(90deg,#d97706,#b45309);color:#fff;border-radius:14px;padding:13px 15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .pay-banner .b-amt{font-size:22px;font-weight:800}
+  .pay-card{border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:14px;padding:13px;margin-bottom:11px;background:#fffdf7}
+  .pay-card.overdue{border-left-color:var(--danger);background:#fff6f6}
+  .pay-card.advance{border-left-color:var(--blue);background:#f6f9ff}
+  .pay-amt{font-size:19px;font-weight:800;color:#8a5200}
+  .pill-over{background:#fee2e2;color:#991b1b;padding:3px 8px;border-radius:999px;font-size:11.5px;font-weight:800}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  th,td{padding:10px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{background:#f3f8f6;font-size:12px;color:#33453d;position:sticky;top:0;z-index:5}
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff;max-height:65vh}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;font-size:11.5px;font-weight:800;background:#eef2f0;color:#33453d;white-space:nowrap}
+  .b-pending{background:#fff3d6;color:#9a6a00}
+  .b-prod{background:#dbeafe;color:#1e40af}
+  .b-ready{background:#dcfce7;color:#166534}
+  .b-disp{background:#e5e7eb;color:#374151}
+  .right{text-align:right}.center{text-align:center}
+  .muted{color:var(--muted)}
+  .hidden{display:none!important}
+  .hint{background:#ecfeff;color:#155e75;border:1px solid #a5f3fc;padding:11px;border-radius:12px;font-size:13px;line-height:1.55}
+  .group-head{background:linear-gradient(90deg,#0f766e,#0c5e57);color:#fff;padding:11px 13px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 8px}
+  .group-head .g-spec{font-size:17px;font-weight:800;letter-spacing:.4px}
+  .group-head .g-spec small{font-weight:600;opacity:.85;font-size:12px}
+  .group-total{background:var(--gold);color:#3a2c05;padding:6px 12px;border-radius:999px;font-weight:800;font-size:14px}
+  .mini-inp{padding:7px 8px;font-size:13px;border-radius:9px}
+  .item-line{display:grid;grid-template-columns:1fr 1fr;gap:8px;border:1px dashed #cdd8d3;border-radius:12px;padding:10px;margin-bottom:10px;background:#fafdfb}
+  .item-line .full{grid-column:span 2}
+  .modal-back{position:fixed;inset:0;background:rgba(10,25,20,.55);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto}
+  .modal{width:min(820px,100%);background:#fff;border-radius:18px;padding:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);margin:20px 0}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:200;background:#10231d;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:13.5px;max-width:90%;text-align:center}
+  .order-card{border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:11px;background:#fff}
+  .order-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .order-party{font-size:16px;font-weight:800}
+  .order-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .item-chip{display:inline-block;background:#f3f8f6;border:1px solid var(--line);border-radius:10px;padding:6px 9px;margin:4px 4px 0 0;font-size:12.5px}
+  .actions-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .footer-note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+  @media(max-width:980px){
+    .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .span4{grid-column:span 2}
+    .stat-bar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media(max-width:560px){
+    header{position:static}
+    .form-grid{grid-template-columns:1fr}
+    .span2,.span4{grid-column:span 1}
+    .item-line{grid-template-columns:1fr}
+    .item-line .full{grid-column:span 1}
+    .stat-bar{grid-template-columns:1fr 1fr}
+    .brand h1{font-size:17px}
+  }
+  @media print{
+    header,.tabs,.head-actions,.no-print,button{display:none!important}
+    body{background:#fff}.card{box-shadow:none}
+    .table-wrap{max-height:none;overflow:visible}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <div class="brand">
+      <h1>HMB <span>Engineering</span> — Order to Dispatch</h1>
+      <p>Order ▸ Production ▸ Weight ▸ Dispatch • Har staff yahan update kare</p>
+    </div>
+    <div class="head-actions no-print">
+      <button class="gold" onclick="openOrderModal()">➕ Naya Order</button>
+      <button onclick="exportJSON()">💾 Backup</button>
+      <label class="btn" for="importFile">📤 Import</label>
+      <input id="importFile" type="file" accept=".json" class="hidden" onchange="importJSON(event)" />
+      <button onclick="exportCSV()">⬇️ CSV</button>
+      <button class="dark" onclick="window.print()">🖨️ Print</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="stat-bar no-print">
+    <div class="stat gold"><div class="s-label">Total Orders (party)</div><div class="s-val" id="stOrders">0</div></div>
+    <div class="stat green"><div class="s-label">Banane baaki (pcs)</div><div class="s-val" id="stPending">0</div></div>
+    <div class="stat blue"><div class="s-label">Ready (pcs)</div><div class="s-val" id="stReady">0</div></div>
+    <div class="stat ok"><div class="s-label">Dispatch ho gaye (pcs)</div><div class="s-val" id="stDisp">0</div></div>
+    <div class="stat warn"><div class="s-label">Payment Pending</div><div class="s-val" id="stPay">₹0</div></div>
+  </div>
+
+  <div class="tabs no-print">
+    <button class="tab active" onclick="showTab('orders',this)">📋 Orders (Party-wise)</button>
+    <button class="tab" onclick="showTab('production',this)">🏭 Production (Opening-wise)</button>
+    <button class="tab" onclick="showTab('dispatch',this)">🚚 Dispatch</button>
+    <button class="tab" onclick="showTab('payment',this)">💰 Payment Follow-up</button>
+    <button class="tab" onclick="showTab('ledger',this)">📒 Party Ledger</button>
+    <button class="tab" onclick="showTab('stock',this)">📦 Wire Stock</button>
+    <button class="tab" onclick="showTab('setup',this)">⚙️ Setup</button>
+  </div>
+
+  <!-- ORDERS (party-wise) -->
+  <section id="orders" class="tab-page">
+    <div class="card">
+      <div class="row-between">
+        <div><h2 style="margin:0">Pending Orders (kaam baaki)</h2><div class="muted" style="font-size:12.5px;margin-top:3px">Dispatch ho chuke orders yahan se hat kar <b>📒 Party Ledger</b> me chale jaate hain.</div></div>
+        <button class="gold" onclick="openOrderModal()">➕ Naya Order Add</button>
+      </div>
+      <div class="form-grid" style="margin-top:12px">
+        <div><label>Search (party/invoice/spec)</label><input id="ordSearch" placeholder="party, HMB/097, 22 x 8" oninput="renderOrders()" /></div>
+        <div><label>Status</label>
+          <select id="ordStatus" onchange="renderOrders()">
+            <option value="">Sabhi (pending)</option>
+            <option value="Pending">Pending</option>
+            <option value="In Production">In Production</option>
+            <option value="Ready">Ready to dispatch</option>
+          </select>
+        </div>
+        <div><label>Payment</label>
+          <select id="ordPay" onchange="renderOrders()">
+            <option value="">Sabhi</option>
+            <option>Advance</option>
+            <option>Received</option>
+            <option>Within 15 Days</option>
+            <option>Within 30 Days</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="orderList"></div>
+  </section>
+
+  <!-- PRODUCTION (opening-wise) -->
+  <section id="production" class="tab-page hidden">
+    <div class="card">
+      <h2>Opening-wise Manufacturing Plan</h2>
+      <div class="hint">
+        Yahan saare orders <b>opening × dia ke hisab se group</b> ho jaate hain. Ek hi spec (jaise <b>22 × 8</b>) ke jitne party ke order hain sab ek jagah, aur niche <b>"Total banana hai"</b> me dikh jaata hai ki mfg ko kitne pc dene hain.
+        Har line me <b>crimp machine</b> aur <b>weaving machine</b> chuno, aur machine se maal ban-ne ke baad <b>weight (kg)</b> bhar do.
+      </div>
+      <div style="margin-top:10px">
+        <label>Sirf banana baaki dikhao?</label>
+        <select id="prodFilter" onchange="renderProduction()" style="max-width:260px">
+          <option value="pending">Sirf Pending + In Production</option>
+          <option value="all">Sab dikhao</option>
+        </select>
+      </div>
+    </div>
+    <div id="productionGroups"></div>
+  </section>
+
+  <!-- DISPATCH -->
+  <section id="dispatch" class="tab-page hidden">
+    <div class="card">
+      <h2>Dispatch — Transport aur WhatsApp</h2>
+      <div class="hint">
+        Sirf <b>Ready for Dispatch</b> orders yahan dikhte hain (Production me "ban gaya" mark kiya hua). <b>Dispatched mark</b> karte hi order yahan se hat kar <b>📒 Party Ledger</b> me chala jaata hai. Ledger se wapas laane ka option bhi hai.
+      </div>
+    </div>
+    <div id="dispatchList"></div>
+  </section>
+
+  <!-- PAYMENT FOLLOW-UP -->
+  <section id="payment" class="tab-page hidden">
+    <div class="card">
+      <h2>Payment Follow-up</h2>
+      <div class="hint">
+        Jin party ka payment <b>pending</b> hai wo yahan dikhte hain (Received wale nahi aate). Har party ke saamne do button: <b>💰 Payment reminder</b> aur <b>🚚 Dispatch detail</b> — dono WhatsApp par bhej sakte ho. Due date nikal gayi to <b>Overdue</b> laal me dikhega.
+      </div>
+      <div class="form-grid" style="margin-top:12px">
+        <div><label>Dikhao</label>
+          <select id="payFilter" onchange="renderPayment()">
+            <option value="pending">Pending (Advance + 15/30 Days)</option>
+            <option value="15">Sirf Within 15 Days</option>
+            <option value="30">Sirf Within 30 Days</option>
+            <option value="advance">Sirf Advance</option>
+            <option value="overdue">Overdue (due date nikal gayi)</option>
+            <option value="all">Sab</option>
+          </select>
+        </div>
+        <div><label>Search party</label><input id="paySearch" placeholder="party naam" oninput="renderPayment()"></div>
+      </div>
+    </div>
+    <div id="paymentList"></div>
+  </section>
+
+  <!-- PARTY LEDGER -->
+  <section id="ledger" class="tab-page hidden">
+    <div class="card">
+      <h2>Party Ledger — Account Statement</h2>
+      <div class="hint">
+        Kisi bhi party ka poora hisaab ek jagah — saare order, dispatch, weight, amount, payment aur "material mila" status. Party dropdown se chuno, ya niche list me party ke naam par click karo.
+      </div>
+      <div class="form-grid" style="margin-top:12px">
+        <div class="span2"><label>Party chuno</label>
+          <select id="ledgerParty" onchange="renderLedger()"><option value="">— Sab parties ki list —</option></select>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:7px">
+          <button class="wa" id="ledgerWaBtn" onclick="ledgerPaymentWA()" style="display:none">💰 Payment reminder</button>
+          <button class="ghost" id="ledgerBackBtn" onclick="clearLedger()" style="display:none">← Sab parties</button>
+        </div>
+      </div>
+    </div>
+    <div id="ledgerBody"></div>
+  </section>
+
+  <!-- WIRE STOCK -->
+  <section id="stock" class="tab-page hidden">
+    <div class="card">
+      <h2>Wire Stock (Raw Material)</h2>
+      <div class="hint">
+        <b>Balance = Stock In (purchase) − Used</b>. Jaise-jaise wire mesh <b>ban kar dispatch</b> hota hai, uska <b>actual wire weight</b> (sheet chhod kar) stock se apne aap kam hota jaata hai. Purchase manually add karo, aur agar seedha wire/koi aur item bikta hai to "Manual Out" se entry karo.
+      </div>
+      <div class="row-between" style="margin-top:10px;gap:8px">
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="gold" onclick="openStockForm('in')">➕ Stock In (purchase)</button>
+          <button class="ghost" onclick="openStockForm('out')">➖ Manual Out (bikri / other)</button>
+          <button class="danger" onclick="openStockForm('scrap')">🗑️ Scrap Entry</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="stockTypeFilter" onchange="renderStock()" style="min-width:170px">
+            <option value="">Movements: Sab (recent)</option>
+            <option value="opening">📋 Sirf Opening Stock</option>
+            <option value="in">Sirf Purchase (IN)</option>
+            <option value="out">Sirf Manual Out</option>
+            <option value="scrap">Sirf Scrap</option>
+          </select>
+          <input id="stockSearch" placeholder="🔍 wire code (SPST/SS304...)" oninput="renderStock()">
+        </div>
+      </div>
+    </div>
+
+    <!-- inline add form -->
+    <div id="stockForm" class="card hidden">
+      <div class="row-between"><h3 id="stockFormTitle" style="margin:0">Stock In</h3><button class="ghost" onclick="closeStockForm()">✕</button></div>
+      <input type="hidden" id="stockFormType" />
+      <div class="form-grid" style="margin-top:10px">
+        <div><label>Date</label><input id="sfDate" type="date" /></div>
+        <div><label>Wire Code</label><input id="sfCode" list="wireCodeData" placeholder="SPST / SS304 / MS" /></div>
+        <div><label>Wire Dia (mm)</label><input id="sfDia" type="number" step="0.01" placeholder="8" /></div>
+        <div><label>Qty (kg)</label><input id="sfQty" type="number" step="0.01" placeholder="500" /></div>
+        <div class="span2"><label id="sfPartyLabel">Supplier / Party</label><input id="sfParty" list="partyData" placeholder="Bansal Wire Industries" /></div>
+        <div class="span2"><label>Bill / Note</label><input id="sfBill" placeholder="bill no ya note" /></div>
+      </div>
+      <div class="actions-row" style="margin-top:12px">
+        <button class="primary" onclick="saveStockMove()">✅ Save</button>
+        <button class="ghost" onclick="closeStockForm()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="stockBody"></div>
+    <div id="stockMovesBox"></div>
+  </section>
+
+  <!-- SETUP -->
+  <section id="setup" class="tab-page hidden">
+    <div class="card">
+      <h3>Products / Materials</h3>
+      <div class="row-between" style="align-items:flex-end;gap:10px">
+        <div style="flex:1"><label>Naya product add karo</label><input id="newProduct" placeholder="e.g. SS 316L Wire Mesh" /></div>
+        <button class="primary" onclick="addProduct()">Add</button>
+      </div>
+      <div id="productListSetup" style="margin-top:10px"></div>
+      <div class="footer-note">Ye list New Order me product dropdown me dikhti hai. Jo nahi chahiye use ✕ se hata do.</div>
+    </div>
+    <div class="card">
+      <h3>⚖️ Weight Settings (calculation)</h3>
+      <div class="form-grid">
+        <div><label>Wastage / extra %</label><input id="setWastage" type="number" step="0.1" onchange="saveWeightSettings()"></div>
+        <div><label>Sheet factor (kg/sqft/mm)</label><input id="setSheetF" type="number" step="0.01" onchange="saveWeightSettings()"></div>
+      </div>
+      <div class="footer-note">
+        <b>Calculated weight = (wire + sheet) × (1 + wastage%)</b><br>
+        • Wire = 25.4/(opening+dia) × dia² × 0.04542 × area(sqft) &nbsp;(2.46 kg/sqft type)<br>
+        • Sheet = area(sqft) × <b>Sheet mm</b> × factor &nbsp;(solid steel ≈ 0.73, perforated kam — default 0.44)<br>
+        • Item me "Sheet mm" bharoge tabhi sheet weight judega. Example: 22×8, 1780×1550, sheet 1.2 → wire 365.46 + sheet 78.4 = <b>443.85 kg</b> (5 pc). 5%/15% wastage chahiye to upar daal do.
+      </div>
+    </div>
+    <div class="card">
+      <h3>Crimp Machines</h3>
+      <div class="row-between" style="align-items:flex-end;gap:10px">
+        <div style="flex:1"><label>Naya crimp machine code</label><input id="newCrimp" placeholder="MC6" /></div>
+        <button class="primary" onclick="addMachine('crimp')">Add</button>
+      </div>
+      <div id="crimpList" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h3>Weaving Machines</h3>
+      <div class="row-between" style="align-items:flex-end;gap:10px">
+        <div style="flex:1"><label>Naya weaving machine code</label><input id="newWeave" placeholder="MM5" /></div>
+        <button class="primary" onclick="addMachine('weave')">Add</button>
+      </div>
+      <div id="weaveList" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h3>Transport List (saved)</h3>
+      <div id="transportList"></div>
+      <div class="footer-note">Transport naam dispatch ke time apne aap save hota hai. Galat ho to yahan se hata do.</div>
+    </div>
+    <div class="card">
+      <div class="hint">
+        <b>May ka data pehle se load hai</b> — pichhle month ke saare invoice/dispatch is tool me aa gaye hain (party list, transport list ready). Naya order banate time party ka naam type karte hi suggestion aa jayega.<br><br>
+        <b>Data kahan save hai?</b> Sab kuch isi browser/device me save hota hai. Device badalne se pehle upar <b>Backup</b> dabakar JSON le lo, naye device par <b>Import</b> kar lo.
+      </div>
+      <div class="footer-note" style="margin-top:8px">
+        Multi-device pe live sync chahiye to ye file cloud version se chalani hogi — wo alag se ban raha hai.
+      </div>
+      <div style="margin-top:12px">
+        <button class="gold" onclick="loadMayData()">📥 May ka data (dobara) load karo</button>
+        <button class="danger" onclick="clearAllOrders()">🧹 Saare orders delete karo (fresh start)</button>
+        <div class="footer-note">Agar May data nahi dikh raha to upar wala button dabao. Fresh shuru karne ke liye red button — pehle Backup le lena.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ORDER MODAL -->
+<div id="orderModal" class="modal-back hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="orderModalTitle" style="margin:0">Naya Order</h2>
+      <button class="ghost" onclick="closeOrderModal()">✕ Band</button>
+    </div>
+    <input type="hidden" id="editOrderId" />
+    <div class="form-grid">
+      <div class="span2"><label>Party / Customer Name *</label><input id="oParty" list="partyData" placeholder="e.g. Palam Stone Crusher" /></div>
+      <div><label>Order No (auto)</label><input id="oOrderNo" placeholder="auto" /></div>
+      <div><label>Order Date</label><input id="oDate" type="date" /></div>
+      <div class="span2"><label>Party Mobile (WhatsApp)</label><input id="oPhone" placeholder="98xxxxxxxx" inputmode="numeric" /></div>
+      <div class="span2"><label>Party Email (mail ke liye)</label><input id="oEmail" placeholder="party@email.com (optional)" /></div>
+      <div class="span4"><label>PO / Confirmation Ref</label><input id="oPoRef" placeholder="Party PO ya 'WhatsApp by Amit ji'" /></div>
+    </div>
+    <div class="hint" style="margin-top:10px">Invoice No, Bill Date, Amount aur Payment terms <b>Dispatch ke time</b> bhare jaate hain — yahan nahi.</div>
+
+    <h3 style="margin:16px 0 8px">Items (ek party ke jitne item ho sab add karo)</h3>
+    <div class="footer-note" style="margin:-4px 0 8px">Wire mesh ke alawa koi aur item ho to bas <b>Product</b> me naam likho aur <b>Qty</b> daalo — opening/dia/size blank chhod sakte ho, entry ban jayegi.</div>
+    <div id="itemRows"></div>
+    <button class="ghost" onclick="addItemRow()">➕ Ek aur item add karo</button>
+
+    <div style="margin-top:10px"><label>Order Note (optional)</label><textarea id="oNote" placeholder="koi special baat, urgent, etc."></textarea></div>
+
+    <div class="actions-row" style="margin-top:14px">
+      <button class="primary" onclick="saveOrder()">✅ Order Save</button>
+      <button class="ghost" onclick="closeOrderModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<datalist id="transportData"></datalist>
+<datalist id="partyData"></datalist>
+<datalist id="clampData">
+  <option value="Length Side">
+  <option value="Width Side">
+  <option value="Both Side">
+  <option value="No Clamp">
+</datalist>
+<datalist id="wireCodeData">
+  <option value="SPST">
+  <option value="SS304">
+  <option value="SS304L">
+  <option value="SS316">
+  <option value="SS310">
+  <option value="SS314">
+  <option value="MS">
+  <option value="GI">
+  <option value="H.T WIRE">
+  <option value="GP SHEET">
+</datalist>
+<datalist id="productData"></datalist>
+
+<script>
+/* ---------- Wire stock seed ---------- */
+const STOCK_SEED = [{"id":"st1","date":"2026-04-01","wireCode":"SPST","dia":2.0,"qty":760.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st2","date":"2026-04-01","wireCode":"SPST","dia":2.5,"qty":500.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st3","date":"2026-04-01","wireCode":"SPST","dia":3.0,"qty":17695.8,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st4","date":"2026-04-01","wireCode":"SPST","dia":4.0,"qty":3810.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st5","date":"2026-04-01","wireCode":"SPST","dia":5.0,"qty":11331.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st6","date":"2026-04-01","wireCode":"SPST","dia":6.0,"qty":12368.4,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st7","date":"2026-04-01","wireCode":"SPST","dia":8.0,"qty":18610.5,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st8","date":"2026-04-01","wireCode":"SPST","dia":10.0,"qty":4933.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st9","date":"2026-04-01","wireCode":"SPST","dia":12.0,"qty":760.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st10","date":"2026-04-01","wireCode":"GI","dia":2.5,"qty":110.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st11","date":"2026-04-01","wireCode":"SS304","dia":2.0,"qty":160.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st12","date":"2026-04-01","wireCode":"SS304","dia":2.5,"qty":600.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st13","date":"2026-04-01","wireCode":"SS304","dia":3.0,"qty":400.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st14","date":"2026-04-01","wireCode":"SS304","dia":4.0,"qty":891.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st15","date":"2026-04-01","wireCode":"SS304","dia":4.5,"qty":700.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st16","date":"2026-04-01","wireCode":"SS304","dia":5.0,"qty":380.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st17","date":"2026-04-01","wireCode":"SS304","dia":6.0,"qty":100.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st18","date":"2026-04-01","wireCode":"SS304","dia":10.0,"qty":150.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st19","date":"2026-04-01","wireCode":"SS316","dia":2.0,"qty":270.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st20","date":"2026-04-01","wireCode":"SS316","dia":3.0,"qty":40.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st21","date":"2026-04-01","wireCode":"SS310","dia":3.0,"qty":60.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st22","date":"2026-04-01","wireCode":"MS","dia":3.0,"qty":1101.15,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st23","date":"2026-04-01","wireCode":"MS","dia":3.8,"qty":4150.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st24","date":"2026-04-01","wireCode":"MS","dia":5.0,"qty":2885.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st25","date":"2026-04-01","wireCode":"MS","dia":6.0,"qty":400.0,"party":"OPENING STOCK","bill":"","opening":true},{"id":"st26","date":"2026-04-10","wireCode":"SS304L","dia":1.5,"qty":406.1,"party":"BANSAL WIRE INDUSTRIES","bill":"339","opening":false},{"id":"st27","date":"2026-04-10","wireCode":"SS304L","dia":4.0,"qty":1008.4,"party":"BANSAL WIRE INDUSTRIES","bill":"339","opening":false},{"id":"st28","date":"2026-04-10","wireCode":"SS304","dia":3.0,"qty":472.7,"party":"BANSAL WIRE INDUSTRIES","bill":"339","opening":false},{"id":"st29","date":"2026-04-10","wireCode":"SS304","dia":2.0,"qty":195.2,"party":"BANSAL WIRE INDUSTRIES","bill":"339","opening":false},{"id":"st30","date":"2026-04-14","wireCode":"SS314","dia":5.0,"qty":169.8,"party":"BANSAL WIRE INDUSTRIES","bill":"497","opening":false},{"id":"st31","date":"2026-04-16","wireCode":"MS","dia":3.5,"qty":2010.0,"party":"MAIDEN FORGINGS LIMITED","bill":"316","opening":false},{"id":"st32","date":"2026-04-18","wireCode":"SPST","dia":2.0,"qty":1154.0,"party":"SUNYNA STEELS PVT. LTD","bill":"500","opening":false},{"id":"st33","date":"2026-04-18","wireCode":"SPST","dia":3.0,"qty":3172.0,"party":"SUNYNA STEELS PVT. LTD","bill":"499","opening":false},{"id":"st34","date":"2026-04-18","wireCode":"SPST","dia":8.0,"qty":5086.0,"party":"SUNYNA STEELS PVT. LTD","bill":"499","opening":false},{"id":"st35","date":"2026-04-18","wireCode":"SPST","dia":12.0,"qty":2245.0,"party":"SUNYNA STEELS PVT. LTD","bill":"499","opening":false},{"id":"st36","date":"2026-04-18","wireCode":"SPST","dia":8.0,"qty":6061.5,"party":"BANSAL STEEL POWER LIMITED","bill":"510","opening":false},{"id":"st37","date":"2026-04-18","wireCode":"SS304","dia":1.5,"qty":152.15,"party":"BANSAL WIRE INDUSTRIES","bill":"678","opening":false},{"id":"st38","date":"2026-04-18","wireCode":"SS304","dia":2.0,"qty":302.0,"party":"BANSAL WIRE INDUSTRIES","bill":"678","opening":false},{"id":"st39","date":"2026-04-25","wireCode":"SPST","dia":3.0,"qty":3112.0,"party":"B.S. WIRE INDUSTRIES","bill":"33","opening":false},{"id":"st40","date":"2026-04-25","wireCode":"SPST","dia":4.0,"qty":2473.0,"party":"B.S. WIRE INDUSTRIES","bill":"33","opening":false},{"id":"st41","date":"2026-04-25","wireCode":"SPST","dia":5.0,"qty":2021.0,"party":"B.S. WIRE INDUSTRIES","bill":"33","opening":false},{"id":"st42","date":"2026-04-25","wireCode":"SPST","dia":6.0,"qty":4739.0,"party":"B.S. WIRE INDUSTRIES","bill":"33","opening":false},{"id":"st43","date":"2026-04-25","wireCode":"SPST","dia":8.0,"qty":6439.0,"party":"B.S. WIRE INDUSTRIES","bill":"33","opening":false},{"id":"st44","date":"2026-04-25","wireCode":"SPST","dia":10.0,"qty":5566.0,"party":"B.S. WIRE INDUSTRIES","bill":"33","opening":false},{"id":"st45","date":"2026-04-30","wireCode":"GP SHEET","dia":1.5,"qty":5970.0,"party":"OM SHRI GANESH STEELS","bill":"73","opening":false},{"id":"st46","date":"2026-05-05","wireCode":"SPST","dia":8.0,"qty":6131.0,"party":"SUNYNA STEELS PVT. LTD","bill":"923","opening":false},{"id":"st47","date":"2026-05-05","wireCode":"SPST","dia":6.0,"qty":4227.0,"party":"SUNYNA STEELS PVT. LTD","bill":"923","opening":false},{"id":"st48","date":"2026-05-05","wireCode":"SPST","dia":3.0,"qty":2106.0,"party":"SUNYNA STEELS PVT. LTD","bill":"924","opening":false},{"id":"st49","date":"2026-05-05","wireCode":"SPST","dia":2.5,"qty":2147.0,"party":"SUNYNA STEELS PVT. LTD","bill":"924","opening":false},{"id":"st50","date":"2026-05-06","wireCode":"SPST","dia":8.0,"qty":390.0,"party":"SUNYNA STEELS PVT. LTD","bill":"942","opening":false},{"id":"st51","date":"2026-05-08","wireCode":"SS304L","dia":1.5,"qty":317.75,"party":"BANSAL WIRE INDUSTRIES","bill":"1341","opening":false},{"id":"st52","date":"2026-05-08","wireCode":"SS304","dia":3.0,"qty":423.7,"party":"BANSAL WIRE INDUSTRIES","bill":"1341","opening":false},{"id":"st53","date":"2026-05-08","wireCode":"SS304L","dia":3.0,"qty":125.9,"party":"BANSAL WIRE INDUSTRIES","bill":"1341","opening":false},{"id":"st54","date":"2026-05-08","wireCode":"SS304","dia":2.0,"qty":276.9,"party":"BANSAL WIRE INDUSTRIES","bill":"1341","opening":false},{"id":"st55","date":"2026-05-09","wireCode":"SPST","dia":2.5,"qty":2879.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1074","opening":false},{"id":"st56","date":"2026-05-09","wireCode":"SPST","dia":4.0,"qty":4579.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1074","opening":false},{"id":"st57","date":"2026-05-09","wireCode":"SPST","dia":10.0,"qty":2712.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1074","opening":false},{"id":"st58","date":"2026-05-09","wireCode":"SPST","dia":6.0,"qty":5005.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1075","opening":false},{"id":"st59","date":"2026-05-17","wireCode":"SS304","dia":3.0,"qty":103.1,"party":"BANSAL WIRE INDUSTRIES","bill":"1650","opening":false},{"id":"st60","date":"2026-05-17","wireCode":"SS304","dia":3.0,"qty":625.7,"party":"BANSAL WIRE INDUSTRIES","bill":"1650","opening":false},{"id":"st61","date":"2026-05-25","wireCode":"SPST","dia":2.0,"qty":2077.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1410","opening":false},{"id":"st62","date":"2026-05-25","wireCode":"SPST","dia":4.0,"qty":4239.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1410","opening":false},{"id":"st63","date":"2026-05-25","wireCode":"SPST","dia":6.0,"qty":4207.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1410","opening":false},{"id":"st64","date":"2026-05-25","wireCode":"SPST","dia":8.0,"qty":4281.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1411","opening":false},{"id":"st65","date":"2026-05-25","wireCode":"SPST","dia":2.5,"qty":1163.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1411","opening":false},{"id":"st66","date":"2026-05-25","wireCode":"H.T WIRE","dia":3.0,"qty":1305.0,"party":"GCB WIRES PRIVATE LIMITED (UNIT -1)","bill":"172","opening":false},{"id":"st67","date":"2026-05-26","wireCode":"SS304","dia":2.5,"qty":774.0,"party":"BANSAL WIRE INDUSTRIES","bill":"1902","opening":false},{"id":"st68","date":"2026-05-26","wireCode":"SS304","dia":4.0,"qty":145.1,"party":"BANSAL WIRE INDUSTRIES","bill":"1902","opening":false},{"id":"st69","date":"2026-05-27","wireCode":"SS304L","dia":2.0,"qty":1051.05,"party":"BANSAL WIRE INDUSTRIES","bill":"1338","opening":false},{"id":"st70","date":"2026-05-27","wireCode":"SS304L","dia":3.0,"qty":1011.55,"party":"BANSAL WIRE INDUSTRIES","bill":"1338","opening":false},{"id":"st71","date":"2026-05-27","wireCode":"SS304L","dia":4.0,"qty":407.3,"party":"BANSAL WIRE INDUSTRIES","bill":"1338","opening":false},{"id":"st72","date":"2026-05-27","wireCode":"SS304","dia":4.0,"qty":542.8,"party":"BANSAL WIRE INDUSTRIES","bill":"1947","opening":false},{"id":"st73","date":"2026-06-05","wireCode":"GP SHEET","dia":1.5,"qty":6295.0,"party":"BANSAL WIRE INDUSTRIES","bill":"153","opening":false},{"id":"st74","date":"2026-06-08","wireCode":"SPST","dia":10.0,"qty":4204.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1805","opening":false},{"id":"st75","date":"2026-06-08","wireCode":"SPST","dia":3.0,"qty":1984.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1805","opening":false},{"id":"st76","date":"2026-06-08","wireCode":"SPST","dia":4.0,"qty":3421.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1805","opening":false},{"id":"st77","date":"2026-06-08","wireCode":"SPST","dia":6.0,"qty":3508.0,"party":"SUNYNA STEELS PVT. LTD","bill":"1806","opening":false},{"id":"st78","date":"2026-06-22","wireCode":"SPST","dia":4.0,"qty":3046.5,"party":"BANSAL WIRE INDUSTRIES","bill":"2683","opening":false},{"id":"st79","date":"2026-06-22","wireCode":"SPST","dia":8.0,"qty":5306.5,"party":"BANSAL WIRE INDUSTRIES","bill":"2683","opening":false},{"id":"st80","date":"2026-06-25","wireCode":"MS","dia":3.0,"qty":275.0,"party":"MAIDEN FORGINGS LIMITED","bill":"1606","opening":false},{"id":"st81","date":"2026-06-25","wireCode":"MS","dia":3.5,"qty":1075.0,"party":"MAIDEN FORGINGS LIMITED","bill":"1606","opening":false},{"id":"st82","date":"2026-06-25","wireCode":"MS","dia":4.0,"qty":790.0,"party":"MAIDEN FORGINGS LIMITED","bill":"1606","opening":false},{"id":"st83","date":"2026-06-26","wireCode":"SS304","dia":1.5,"qty":302.5,"party":"BANSAL WIRE INDUSTRIES","bill":"3020","opening":false},{"id":"st84","date":"2026-06-26","wireCode":"SS304","dia":4.0,"qty":186.6,"party":"BANSAL WIRE INDUSTRIES","bill":"3020","opening":false},{"id":"st85","date":"2026-06-26","wireCode":"SS304","dia":6.0,"qty":110.0,"party":"BANSAL WIRE INDUSTRIES","bill":"3020","opening":false},{"id":"st86","date":"2026-06-26","wireCode":"SS304","dia":4.0,"qty":116.7,"party":"BANSAL WIRE INDUSTRIES","bill":"3020","opening":false},{"id":"st87","date":"2026-06-29","wireCode":"SPST","dia":3.0,"qty":2929.2,"party":"BANSAL WIRE INDUSTRIES","bill":"2870","opening":false},{"id":"st88","date":"2026-06-29","wireCode":"SPST","dia":4.0,"qty":1030.0,"party":"BANSAL WIRE INDUSTRIES","bill":"2870","opening":false},{"id":"st89","date":"2026-06-29","wireCode":"SPST","dia":6.0,"qty":5087.0,"party":"BANSAL WIRE INDUSTRIES","bill":"2870","opening":false},{"id":"st90","date":"2026-06-29","wireCode":"SPST","dia":10.0,"qty":3028.2,"party":"BANSAL WIRE INDUSTRIES","bill":"2870","opening":false},{"id":"st91","date":"2026-06-29","wireCode":"SS310","dia":3.0,"qty":99.9,"party":"BANSAL WIRE INDUSTRIES","bill":"1740","opening":false},{"id":"st92","date":"2026-06-29","wireCode":"SS310","dia":3.0,"qty":970.0,"party":"BANSAL WIRE INDUSTRIES","bill":"1731","opening":false}];
+
+/* ---------- May seed data ---------- */
+const SEED_DATA = {"orders":[{"id":"seed1","orderNo":"HMB/092","invoiceNo":"HMB/092","poRef":"WHATSAPP BY AMIT JI DT:- 25.4.20226","party":"SCREEN STATION PRIVATE LIMITED","phone":"","date":"2026-05-01","payStatus":"Received","amount":8850,"dueDate":"2026-05-31","transport":"BY PORTER","bilty":"CRN2051431345","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s1_1","product":"Spring Steel Wire Mesh","opening":15,"dia":3,"length":3000,"width":1828,"clamp":"","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":37,"dispatched":true}]},{"id":"seed2","orderNo":"HMB/094","invoiceNo":"HMB/094","poRef":"WHATSAPP BY AMIT JI","party":"TRADE & SERVICE CENTRE","phone":"","date":"2026-05-01","payStatus":"Received","amount":86992,"dueDate":"2026-05-31","transport":"BY PORTER","bilty":"CRN2051431345","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s2_1","product":"SS 304 Wire Mesh","opening":3,"dia":2,"length":4000,"width":1000,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":45,"dispatched":true},{"id":"s2_2","product":"SS 304 Wire Mesh","opening":8,"dia":3,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":205.45,"dispatched":true}]},{"id":"seed3","orderNo":"HMB/095","invoiceNo":"HMB/095","poRef":"","party":"CASH","phone":"","date":"2026-05-01","payStatus":"Received","amount":17700,"dueDate":"2026-04-06","transport":".","bilty":"0","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s3_1","product":"SS 304 Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":0,"dispatched":true}]},{"id":"seed4","orderNo":"HMB/096","invoiceNo":"HMB/096","poRef":"CONFRIM BY SUMIT JI DT :- 15.04.2026","party":"AMARSHIV STONE CRUSHER","phone":"","date":"2026-05-01","payStatus":"Received","amount":137470,"dueDate":"2026-05-31","transport":"V TRANS UP BORDER","bilty":"4122137516","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s4_1","product":"Spring Steel Wire Mesh","opening":8,"dia":5,"length":1270,"width":1473,"clamp":"1219 mm side","pcs":5,"unit":"NOS","crimpM":"","weaveM":"","weight":52.4,"dispatched":true},{"id":"s4_2","product":"Spring Steel Wire Mesh","opening":7,"dia":4,"length":1270,"width":1473,"clamp":"1219 mm side","pcs":5,"unit":"NOS","crimpM":"","weaveM":"","weight":43,"dispatched":true},{"id":"s4_3","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"1219 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":1.2,"dispatched":true}]},{"id":"seed5","orderNo":"HMB/097","invoiceNo":"HMB/097","poRef":"CONFIRM BY SUMIT JI DT:- 1.5.2026","party":"ATHARV MINERAL INDUSTRIES LLP","phone":"","date":"2026-05-01","payStatus":"Received","amount":72865,"dueDate":"2026-05-31","transport":"DELHI HUBLI ROADWAYS","bilty":"47-179","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s5_1","product":"Spring Steel Wire Mesh","opening":3.5,"dia":2,"length":2200,"width":1470,"clamp":"2200 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":86.05,"dispatched":true},{"id":"s5_2","product":"Spring Steel Wire Mesh","opening":3.5,"dia":2,"length":2200,"width":1470,"clamp":"2080 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":84.84,"dispatched":true},{"id":"s5_3","product":"Spring Steel Wire Mesh","opening":1.6,"dia":1,"length":1920,"width":1470,"clamp":"1800 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":71.44,"dispatched":true},{"id":"s5_4","product":"Spring Steel Wire Mesh","opening":1.6,"dia":1,"length":1920,"width":1470,"clamp":"1920 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":73.27,"dispatched":true},{"id":"s5_5","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":50,"unit":"NOS","crimpM":"","weaveM":"","weight":0.67,"dispatched":true}]},{"id":"seed6","orderNo":"HMB/098","invoiceNo":"HMB/098","poRef":"HMB/169/SO","party":"YASH METAL CRAFTS","phone":"","date":"2026-05-01","payStatus":"Received","amount":35400,"dueDate":"2026-05-31","transport":"SHIMLA MANALI GOODS TRANSPORT","bilty":"UPB226123","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s6_1","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":250,"unit":"NOS","crimpM":"","weaveM":"","weight":0.67,"dispatched":true}]},{"id":"seed7","orderNo":"HMB/099","invoiceNo":"HMB/099","poRef":"WHATSAPP BY AMIT JI DT:- 27.4.2026","party":"LAXMI TRADERS ENGINEERS","phone":"","date":"2026-05-01","payStatus":"Within 30 Days","amount":40710,"dueDate":"2026-05-08","transport":"BY PORTER","bilty":"CRN2051431345","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s7_1","product":"SS 304 Wire Mesh","opening":15,"dia":3,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":125,"dispatched":true}]},{"id":"seed8","orderNo":"HMB/100","invoiceNo":"HMB/100","poRef":"WHATSAPP BY AMIT JI DT:- 14.04.2026","party":"TRADE & SERVICE CENTRE","phone":"","date":"2026-05-01","payStatus":"Advance","amount":126880,"dueDate":"2026-05-08","transport":"BY PORTER","bilty":"CRN1689867536","dispatchDate":"2026-05-01","note":"May data (import)","items":[{"id":"s8_1","product":"SS 304 Wire Mesh","opening":6,"dia":3,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":245,"dispatched":true},{"id":"s8_2","product":"SS 304 Wire Mesh","opening":12,"dia":3,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":144,"dispatched":true}]},{"id":"seed9","orderNo":"HMB/101","invoiceNo":"HMB/101","poRef":"PSMPL/SID/HO/2611012","party":"PUSHP STEELS AND MINING PVT LTD","phone":"","date":"2026-05-02","payStatus":"Received","amount":145978,"dueDate":"2026-06-01","transport":"DEEPAK ROADLINES","bilty":"898102","dispatchDate":"2026-05-02","note":"May data (import)","items":[{"id":"s9_1","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":3500,"width":1160,"clamp":"3500 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":69,"dispatched":true},{"id":"s9_2","product":"Spring Steel Wire Mesh","opening":8,"dia":3,"length":3500,"width":1160,"clamp":"3500 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":58,"dispatched":true},{"id":"s9_3","product":"Spring Steel Wire Mesh","opening":10,"dia":6,"length":3500,"width":1160,"clamp":"3500 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":140,"dispatched":true},{"id":"s9_4","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1300,"width":1160,"clamp":"1300 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":47,"dispatched":true},{"id":"s9_5","product":"Spring Steel Wire Mesh","opening":28,"dia":8,"length":1300,"width":1160,"clamp":"1300 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":38.3,"dispatched":true}]},{"id":"seed10","orderNo":"HMB/102","invoiceNo":"HMB/102","poRef":"4100080987","party":"MKC INFRASTRUCTURE LTD","phone":"","date":"2026-05-02","payStatus":"Within 30 Days","amount":22302,"dueDate":"2026-06-01","transport":"DELHI PUNJAB TRANSPORT","bilty":"UPB260003691","dispatchDate":"2026-05-02","note":"May data (import)","items":[{"id":"s10_1","product":"Spring Steel Wire Mesh","opening":28,"dia":8,"length":1775,"width":1900,"clamp":"1775 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":81.5,"dispatched":true}]},{"id":"seed11","orderNo":"HMB/103","invoiceNo":"HMB/103","poRef":"PHPPL/APR/2026-HOP-52","party":"PHAGWARA HOSHIARPUR PATHWAYS PRIVATE LIMITED","phone":"","date":"2026-05-02","payStatus":"Received","amount":90152,"dueDate":"2026-06-01","transport":"DELHI PUNJAB TRANSPORT","bilty":"UPB260003692","dispatchDate":"2026-05-02","note":"May data (import)","items":[{"id":"s11_1","product":"Spring Steel Wire Mesh","opening":4,"dia":2,"length":1190,"width":3535,"clamp":"1190 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":29,"dispatched":true},{"id":"s11_2","product":"Spring Steel Wire Mesh","opening":12.5,"dia":4,"length":1190,"width":3680,"clamp":"1190 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":59.6,"dispatched":true},{"id":"s11_3","product":"Spring Steel Wire Mesh","opening":23,"dia":5,"length":1215,"width":1150,"clamp":"1215 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":20,"dispatched":true},{"id":"s11_4","product":"Spring Steel Wire Mesh","opening":23,"dia":5,"length":1620,"width":1150,"clamp":"1620 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":26,"dispatched":true},{"id":"s11_5","product":"Spring Steel Wire Mesh","opening":40,"dia":8,"length":1300,"width":1150,"clamp":"1300 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":29,"dispatched":true},{"id":"s11_6","product":"Spring Steel Wire Mesh","opening":40,"dia":8,"length":1650,"width":1150,"clamp":"1650 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":36.6,"dispatched":true}]},{"id":"seed12","orderNo":"HMB/104","invoiceNo":"HMB/104","poRef":"WHATSAPP BY AMIT JI DT :- 1.5.2026","party":"AD TRADING COMPANY","phone":"","date":"2026-05-04","payStatus":"Advance","amount":4130,"dueDate":"2026-04-06","transport":"BY ROAD","bilty":"HAND DELIVERY","dispatchDate":"2026-05-04","note":"May data (import)","items":[{"id":"s12_1","product":"SS 316 Wire Mesh","opening":15,"dia":3,"length":600,"width":1200,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":5,"dispatched":true}]},{"id":"seed13","orderNo":"HMB/105","invoiceNo":"HMB/105","poRef":"HMB/80/SO","party":"SHARADA STONE CRUSHER","phone":"","date":"2026-05-04","payStatus":"Received","amount":109976,"dueDate":"2026-06-03","transport":"U.P. DELHI GOODS CORPORATION","bilty":"2185","dispatchDate":"2026-05-04","note":"May data (import)","items":[{"id":"s13_1","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":15240,"width":1524,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":344,"dispatched":true},{"id":"s13_2","product":"Spring Steel Wire Mesh","opening":14,"dia":6,"length":3048,"width":1524,"clamp":"","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":111,"dispatched":true}]},{"id":"seed14","orderNo":"HMB/106","invoiceNo":"HMB/106","poRef":"WHATSAPP BY AMIT JI DT :- 30.04.2026","party":"SADDIK  IRON INDUSTRIES","phone":"","date":"2026-05-04","payStatus":"Within 30 Days","amount":11800,"dueDate":"2026-06-03","transport":"SHREE JAIN ROADWAYS","bilty":"UPB55101","dispatchDate":"2026-05-04","note":"May data (import)","items":[{"id":"s14_1","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":8229,"width":1524,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":240,"dispatched":true},{"id":"s14_2","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":8229,"width":1828,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":274,"dispatched":true}]},{"id":"seed15","orderNo":"HMB/107","invoiceNo":"HMB/107","poRef":"WHATSAPP BY AMIT JI DT :- 26.04.2026","party":"UNIWORLD CONSTRUCTION EQUIPMENT","phone":"","date":"2026-05-04","payStatus":"Received","amount":17700,"dueDate":"2026-06-03","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-04","note":"May data (import)","items":[{"id":"s15_1","product":"Spring Steel Wire Mesh","opening":40,"dia":10,"length":4267,"width":1219,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":134,"dispatched":true}]},{"id":"seed16","orderNo":"HMB/108","invoiceNo":"HMB/108","poRef":"25 DATE:- 18.02.2026","party":"K.B MANUFACTURERS","phone":"","date":"2026-05-05","payStatus":"Advance","amount":75579,"dueDate":"2026-04-06","transport":"BY PORTER","bilty":"CRN1943996560","dispatchDate":"2026-05-05","note":"May data (import)","items":[{"id":"s16_1","product":"SS 314 Wire Mesh","opening":20,"dia":5,"length":1165,"width":450,"clamp":"","pcs":11,"unit":"NOS","crimpM":"","weaveM":"","weight":7.5,"dispatched":true}]},{"id":"seed17","orderNo":"HMB/109","invoiceNo":"HMB/109","poRef":"SS/26-27/PR/10151","party":"SUNSTAR PRECISION FORGE LTD","phone":"","date":"2026-05-05","payStatus":"Advance","amount":147500,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER PORTER","bilty":"CRN1605202339","dispatchDate":"2026-05-05","note":"May data (import)","items":[{"id":"s17_1","product":"SS 304 Wire Mesh","opening":15,"dia":4,"length":647,"width":850,"clamp":"","pcs":20,"unit":"NOS","crimpM":"","weaveM":"","weight":7.2,"dispatched":true},{"id":"s17_2","product":"SS 304 Wire Mesh","opening":15,"dia":4,"length":1257,"width":495,"clamp":"","pcs":20,"unit":"NOS","crimpM":"","weaveM":"","weight":6.2,"dispatched":true}]},{"id":"seed18","orderNo":"HMB/110","invoiceNo":"HMB/110","poRef":"WHATSAPP BY SUMIT JI DT :- 15.04.2026","party":"SHARADA MAA INDUSTRIES","phone":"","date":"2026-05-05","payStatus":"Received","amount":354236,"dueDate":"","transport":"TRANS INDIA FREIGHT CARRIERS","bilty":"308","dispatchDate":"2026-05-05","note":"May data (import)","items":[{"id":"s18_1","product":"Spring Steel Wire Mesh","opening":30,"dia":10,"length":1550,"width":1750,"clamp":"1550 mm side","pcs":12,"unit":"NOS","crimpM":"","weaveM":"","weight":93.2,"dispatched":true},{"id":"s18_2","product":"Spring Steel Wire Mesh","opening":22,"dia":8,"length":1550,"width":1750,"clamp":"1550 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":80,"dispatched":true},{"id":"s18_3","product":"Spring Steel Wire Mesh","opening":12,"dia":6,"length":1550,"width":1750,"clamp":"1550 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":77,"dispatched":true},{"id":"s18_4","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":1550,"width":1750,"clamp":"1550 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":48,"dispatched":true}]},{"id":"seed19","orderNo":"HMB/111","invoiceNo":"HMB/111","poRef":"HMB/177/SO","party":"SHIV SHEETLA GRANITE","phone":"","date":"2026-05-05","payStatus":"Received","amount":213551,"dueDate":"2026-04-06","transport":"TRANS INDIA FREIGHT CARRIERS","bilty":"309","dispatchDate":"2026-05-05","note":"May data (import)","items":[{"id":"s19_1","product":"Spring Steel Wire Mesh","opening":20,"dia":6,"length":1549,"width":1955,"clamp":"1524 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":60,"dispatched":true},{"id":"s19_2","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":1549,"width":1955,"clamp":"1524 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":73.3,"dispatched":true},{"id":"s19_3","product":"Spring Steel Wire Mesh","opening":30,"dia":10,"length":1549,"width":1955,"clamp":"1524 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":102,"dispatched":true},{"id":"s19_4","product":"Spring Steel Wire Mesh","opening":30,"dia":8,"length":1549,"width":1955,"clamp":"1524 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":70.6,"dispatched":true},{"id":"s19_5","product":"Spring Steel Wire Mesh","opening":0,"dia":3,"length":1549,"width":1955,"clamp":"1524 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":35,"dispatched":true}]},{"id":"seed20","orderNo":"HMB/112","invoiceNo":"HMB/112","poRef":"MRK/2026-27/002, MRK/2026-27/004","party":"MRK INDUSTRIES","phone":"","date":"2026-05-06","payStatus":"Received","amount":114962,"dueDate":"2026-04-06","transport":"BY PORTER","bilty":"CRN1205465643","dispatchDate":"2026-05-06","note":"May data (import)","items":[{"id":"s20_1","product":"SS 304 Wire Mesh","opening":18,"dia":3,"length":15000,"width":640,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":47,"dispatched":true},{"id":"s20_2","product":"SS 304 Wire Mesh","opening":20,"dia":3,"length":10000,"width":640,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":35,"dispatched":true},{"id":"s20_3","product":"SS 304 Wire Mesh","opening":25,"dia":3,"length":10000,"width":640,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":30,"dispatched":true},{"id":"s20_4","product":"SS 304 Wire Mesh","opening":20,"dia":4,"length":10000,"width":600,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":55,"dispatched":true},{"id":"s20_5","product":"SS 304 Wire Mesh","opening":24,"dia":4,"length":10000,"width":600,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":46.5,"dispatched":true}]},{"id":"seed21","orderNo":"HMB/113","invoiceNo":"HMB/113","poRef":"0300-01-2627-000047","party":"LSC MINES AND MINERALS PVT LTD","phone":"","date":"2026-05-06","payStatus":"Within 30 Days","amount":28615,"dueDate":"2026-06-05","transport":"SHREE JAIN ROADWAYS","bilty":"UPB55147","dispatchDate":"2026-05-06","note":"May data (import)","items":[{"id":"s21_1","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":1270,"width":1960,"clamp":"1270 mm side","pcs":5,"unit":"NOS","crimpM":"","weaveM":"","weight":42,"dispatched":true}]},{"id":"seed22","orderNo":"HMB/114","invoiceNo":"HMB/114","poRef":"WHATSAPP BY AMIT JI DT :- 14-04-2026","party":"A & J MINES AND MINERAL LLP","phone":"","date":"2026-05-06","payStatus":"Received","amount":24780,"dueDate":"2026-06-05","transport":"SHREE JAIN ROADWAYS","bilty":"UPB55148","dispatchDate":"2026-05-06","note":"May data (import)","items":[{"id":"s22_1","product":"Spring Steel Wire Mesh","opening":6,"dia":2,"length":15240,"width":1500,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":145,"dispatched":true}]},{"id":"seed23","orderNo":"HMB/115","invoiceNo":"HMB/115","poRef":"4000379247-M01-1019","party":"NTPC LIMITED","phone":"","date":"2026-05-06","payStatus":"Received","amount":59000,"dueDate":"2026-04-06","transport":"ARC (UP BORDER)","bilty":"N6003263770","dispatchDate":"2026-05-06","note":"May data (import)","items":[{"id":"s23_1","product":"SS 304 Wire Mesh","opening":1.4,"dia":0.7,"length":25000,"width":2000,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":304.97,"dispatched":true}]},{"id":"seed24","orderNo":"HMB/116","invoiceNo":"HMB/116","poRef":"WHATSAPP BY AMIT JI DT :- 14.4.2026","party":"WINSOME INDUSTRIES","phone":"","date":"2026-05-08","payStatus":"Within 30 Days","amount":152456,"dueDate":"2026-06-07","transport":"LALJI MULJI TRANSPORT","bilty":"45806300","dispatchDate":"2026-05-08","note":"May data (import)","items":[{"id":"s24_1","product":"Spring Steel Wire Mesh","opening":22,"dia":6,"length":1480,"width":1960,"clamp":"1480 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":53,"dispatched":true},{"id":"s24_2","product":"Spring Steel Wire Mesh","opening":20,"dia":6,"length":1480,"width":1960,"clamp":"1480 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":57,"dispatched":true},{"id":"s24_3","product":"Spring Steel Wire Mesh","opening":10,"dia":4,"length":1480,"width":1960,"clamp":"1480 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":50,"dispatched":true},{"id":"s24_4","product":"Spring Steel Wire Mesh","opening":4.5,"dia":3,"length":1480,"width":1960,"clamp":"1480 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":55.4,"dispatched":true}]},{"id":"seed25","orderNo":"HMB/118","invoiceNo":"HMB/118","poRef":"NIB/HO-186/APR/2026","party":"NEW INDIA INFRA BUILDTECH LIMITED","phone":"","date":"2026-05-09","payStatus":"Advance","amount":212400,"dueDate":"2026-05-16","transport":"BALAJI TEMPO SERVICES","bilty":"429","dispatchDate":"2026-05-09","note":"May data (import)","items":[{"id":"s25_1","product":"Spring Steel Wire Mesh","opening":21,"dia":6,"length":1780,"width":1900,"clamp":"1780 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":67,"dispatched":true},{"id":"s25_2","product":"Spring Steel Wire Mesh","opening":10,"dia":4,"length":1780,"width":3370,"clamp":"1780 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":77,"dispatched":true},{"id":"s25_3","product":"Spring Steel Wire Mesh","opening":28,"dia":8,"length":1780,"width":1920,"clamp":"1780 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":84,"dispatched":true},{"id":"s25_4","product":"Spring Steel Wire Mesh","opening":4,"dia":2,"length":1780,"width":3040,"clamp":"1780 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":64,"dispatched":true},{"id":"s25_5","product":"Spring Steel Wire Mesh","opening":14,"dia":4,"length":1780,"width":3535,"clamp":"1780 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":78,"dispatched":true}]},{"id":"seed26","orderNo":"HMB/119","invoiceNo":"HMB/119","poRef":"HMB/181/SO dt. 11-May-26","party":"DAMODAR PERFORATORS","phone":"","date":"2026-05-11","payStatus":"Within 30 Days","amount":56640,"dueDate":"2026-05-26","transport":"ARRANGED BY CUSTOMER","bilty":"0","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s26_1","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":3500,"width":1600,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":120,"dispatched":true}]},{"id":"seed27","orderNo":"HMB/120","invoiceNo":"HMB/120","poRef":"100196316 DTD .22122025","party":"HYDERABAD C&D WASTE PRIVATE LIMITED","phone":"","date":"2026-05-11","payStatus":"Within 30 Days","amount":331475,"dueDate":"2026-05-26","transport":"NAGPUR TRANSPORT","bilty":"2532","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s27_1","product":"Spring Steel Wire Mesh","opening":42,"dia":8,"length":1520,"width":1790,"clamp":"1520 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":48,"dispatched":true},{"id":"s27_2","product":"Spring Steel Wire Mesh","opening":22,"dia":6,"length":1520,"width":1790,"clamp":"1520 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":50,"dispatched":true},{"id":"s27_3","product":"Spring Steel Wire Mesh","opening":12,"dia":6,"length":1520,"width":1790,"clamp":"1520 mm side","pcs":16,"unit":"NOS","crimpM":"","weaveM":"","weight":76,"dispatched":true},{"id":"s27_4","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":1520,"width":1790,"clamp":"1520 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":58.4,"dispatched":true},{"id":"s27_5","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":50,"unit":"KG","crimpM":"","weaveM":"","weight":0,"dispatched":true}]},{"id":"seed28","orderNo":"HMB/121","invoiceNo":"HMB/121","poRef":"HMB/184/SO","party":"JINDAL STEEL AND WIRE INDUSTRIES","phone":"","date":"2026-05-11","payStatus":"Received","amount":60008.9,"dueDate":"2026-05-26","transport":"DELHI PUNJAB TRANSPORT","bilty":"UPB260004721","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s28_1","product":"Spring Steel Wire Mesh","opening":2.38,"dia":1.2,"length":15240,"width":1550,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":125,"dispatched":true}]},{"id":"seed29","orderNo":"HMB/122","invoiceNo":"HMB/122","poRef":"WHATSAPP BY AMIT JI DT :- 29.04.2026","party":"DEV WIRES","phone":"","date":"2026-05-11","payStatus":"Advance","amount":103132,"dueDate":"2026-04-06","transport":"NEW JAGDAMBA TRANSPORT","bilty":"1563","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s29_1","product":"Spring Steel Wire Mesh","opening":4,"dia":2.5,"length":15240,"width":1524,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":286,"dispatched":true},{"id":"s29_2","product":"Spring Steel Wire Mesh","opening":4,"dia":2.5,"length":15240,"width":1828,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":343,"dispatched":true}]},{"id":"seed30","orderNo":"HMB/123","invoiceNo":"HMB/123","poRef":"2PO25/250205629","party":"FLOWMORE LIMITED","phone":"","date":"2026-05-11","payStatus":"Within 30 Days","amount":4790,"dueDate":"2026-07-10","transport":"BALAJI TEMPO SERVICES","bilty":"0","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s30_1","product":"MS Wire Mesh","opening":25,"dia":3,"length":11000,"width":860,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":41,"dispatched":true}]},{"id":"seed31","orderNo":"HMB/124","invoiceNo":"HMB/124","poRef":"1PO26/260100006","party":"FLOWMORE LIMITED","phone":"","date":"2026-05-11","payStatus":"Within 30 Days","amount":17016,"dueDate":"2026-07-10","transport":"BALAJI TEMPO SERVICES","bilty":"0","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s31_1","product":"MS Wire Mesh","opening":25,"dia":6,"length":12000,"width":800,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":144,"dispatched":true}]},{"id":"seed32","orderNo":"HMB/125","invoiceNo":"HMB/125","poRef":"1PO26/260100191","party":"FLOWMORE LIMITED","phone":"","date":"2026-05-11","payStatus":"Within 30 Days","amount":25931,"dueDate":"2026-07-10","transport":"BALAJI TEMPO SERVICES","bilty":"0","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s32_1","product":"SS 304 Wire Mesh","opening":31.5,"dia":5,"length":8500,"width":800,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":65,"dispatched":true}]},{"id":"seed33","orderNo":"CASH","invoiceNo":"CASH","poRef":"WHATSAPP BY AMIT JI DT :- 30.4.2026","party":"HYDRO CRAFT ENGINEERS","phone":"","date":"2026-05-11","payStatus":"Advance","amount":0,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER","bilty":"0","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s33_1","product":"Spring Steel Wire Mesh","opening":9,"dia":5,"length":1651,"width":1955,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":75,"dispatched":true},{"id":"s33_2","product":"Spring Steel Wire Mesh","opening":4,"dia":3,"length":6096,"width":1828,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":198,"dispatched":true},{"id":"s33_3","product":"Spring Steel Wire Mesh","opening":7,"dia":5,"length":1651,"width":1955,"clamp":"1651 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":99,"dispatched":true},{"id":"s33_4","product":"Spring Steel Wire Mesh","opening":4,"dia":3,"length":1651,"width":1955,"clamp":"1651 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":67,"dispatched":true}]},{"id":"seed34","orderNo":"HMB/126","invoiceNo":"HMB/126","poRef":"WHAT'S APP CONFIRMATION SOURABH JI","party":"ASHIRWAD STONE INFRA PROJECTS (P) LTD","phone":"","date":"2026-05-11","payStatus":"Advance","amount":153872,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER","bilty":"4541","dispatchDate":"2026-05-11","note":"May data (import)","items":[{"id":"s34_1","product":"Spring Steel Wire Mesh","opening":32,"dia":10,"length":1600,"width":1760,"clamp":"1550 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":92,"dispatched":true},{"id":"s34_2","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1600,"width":1760,"clamp":"1550 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":72,"dispatched":true},{"id":"s34_3","product":"Spring Steel Wire Mesh","opening":14,"dia":6,"length":1600,"width":1760,"clamp":"1550 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":77,"dispatched":true},{"id":"s34_4","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":1600,"width":1760,"clamp":"1550 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":64,"dispatched":true}]},{"id":"seed35","orderNo":"HMB/127","invoiceNo":"HMB/127","poRef":"WHATSAPP BY AMIT JI DT:- 27.03.2026","party":"SCREEN STATION PRIVATE LIMITED","phone":"","date":"2026-05-12","payStatus":"Received","amount":14603,"dueDate":"2026-05-27","transport":"BY PORTER","bilty":"CRN1028686688","dispatchDate":"2026-05-12","note":"May data (import)","items":[{"id":"s35_1","product":"SS 304 Wire Mesh","opening":20,"dia":2,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":45,"dispatched":true}]},{"id":"seed36","orderNo":"HMB/128","invoiceNo":"HMB/128","poRef":"WHATSAPP BY AMIT JI DT:- 18.04.2026","party":"LAXMI WIRE NETTING WORKS","phone":"","date":"2026-05-12","payStatus":"Received","amount":18290,"dueDate":"2026-05-27","transport":"BY PORTER","bilty":"CRN1028686688","dispatchDate":"2026-05-12","note":"May data (import)","items":[{"id":"s36_1","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":5000,"width":1600,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":145,"dispatched":true}]},{"id":"seed37","orderNo":"HMB/129","invoiceNo":"HMB/129","poRef":"HMB/182/SO","party":"A-ONE ARVIND STONE CRUSHING CO.","phone":"","date":"2026-05-12","payStatus":"Received","amount":29264,"dueDate":"2026-05-27","transport":"BALAJI TEMPO SERVICES","bilty":"433","dispatchDate":"2026-05-12","note":"May data (import)","items":[{"id":"s37_1","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":1727,"width":1778,"clamp":"1676 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":63.5,"dispatched":true}]},{"id":"seed38","orderNo":"HMB/130","invoiceNo":"HMB/130","poRef":"HMB/198/SO","party":"SURAJ STONE CRUSHING CO.","phone":"","date":"2026-05-12","payStatus":"Received","amount":65018,"dueDate":"2026-05-27","transport":"BALAJI TEMPO SERVICES","bilty":"434","dispatchDate":"2026-05-12","note":"May data (import)","items":[{"id":"s38_1","product":"Spring Steel Wire Mesh","opening":14,"dia":6,"length":1701,"width":1752,"clamp":"1701 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":78.6,"dispatched":true},{"id":"s38_2","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":1651,"width":1752,"clamp":"1651 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":62.6,"dispatched":true}]},{"id":"seed39","orderNo":"HMB/131","invoiceNo":"HMB/131","poRef":"WHATSAPP BY AMIT JI DT:- 1.5.2026","party":"RAJA STONE CRUSHING MILLS","phone":"","date":"2026-05-12","payStatus":"Advance","amount":130862,"dueDate":"2026-04-06","transport":"BALAJI TEMPO SERVICES","bilty":"435","dispatchDate":"2026-05-12","note":"May data (import)","items":[{"id":"s39_1","product":"Spring Steel Wire Mesh","opening":22,"dia":8,"length":1727,"width":1803,"clamp":"1676 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":92,"dispatched":true},{"id":"s39_2","product":"Spring Steel Wire Mesh","opening":14,"dia":8,"length":1574,"width":1790,"clamp":"1524 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":111,"dispatched":true},{"id":"s39_3","product":"Spring Steel Wire Mesh","opening":8,"dia":5,"length":1574,"width":1790,"clamp":"1524 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":80,"dispatched":true}]},{"id":"seed40","orderNo":"HMB/132","invoiceNo":"HMB/132","poRef":"HMB/198/SO","party":"RIDHI SIDHI STONE CRUSHER","phone":"","date":"2026-05-12","payStatus":"Received","amount":107911,"dueDate":"2026-06-11","transport":"BALAJI TEMPO SERVICES","bilty":"436","dispatchDate":"2026-05-12","note":"May data (import)","items":[{"id":"s40_1","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1600,"width":1950,"clamp":"1600 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":86.6,"dispatched":true},{"id":"s40_2","product":"Spring Steel Wire Mesh","opening":22,"dia":8,"length":1600,"width":1950,"clamp":"1600 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":94.5,"dispatched":true},{"id":"s40_3","product":"Spring Steel Wire Mesh","opening":14,"dia":6,"length":1600,"width":1950,"clamp":"1600 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":82,"dispatched":true},{"id":"s40_4","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":1600,"width":1950,"clamp":"1600 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":66,"dispatched":true},{"id":"s40_5","product":"Spring Steel Wire Mesh","opening":3.5,"dia":2,"length":1600,"width":1950,"clamp":"1600 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":32,"dispatched":true}]},{"id":"seed41","orderNo":"HMB/133","invoiceNo":"HMB/133","poRef":"HMB/162/SO","party":"PERFECT (INDIA ) CO.","phone":"","date":"2026-05-12","payStatus":"Advance","amount":13216,"dueDate":"2026-04-06","transport":"BY PORTER","bilty":"CRN1110516955","dispatchDate":"2026-05-12","note":"May data (import)","items":[{"id":"s41_1","product":"Spring Steel Wire Mesh","opening":12,"dia":3,"length":2500,"width":1250,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":23.5,"dispatched":true}]},{"id":"seed42","orderNo":"HMB/134","invoiceNo":"HMB/134","poRef":"26-27-011-05 DT:- 05.05.2026","party":"ABSOLUTE GREEN POLYMERS PVT LTD","phone":"","date":"2026-05-13","payStatus":"Advance","amount":3540,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER","bilty":"0","dispatchDate":"2026-05-13","note":"May data (import)","items":[{"id":"s42_1","product":"SS 304 Wire Mesh","opening":0.7,"dia":0,"length":2000,"width":1500,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":2.5,"dispatched":true}]},{"id":"seed43","orderNo":"HMB/135","invoiceNo":"HMB/135","poRef":"WHATSAPP BY SUMIT JI DT:- 13.05.2026","party":"UDAY WIRE NETTING","phone":"","date":"2026-05-13","payStatus":"Advance","amount":59000,"dueDate":"2026-04-06","transport":"BY PORTER","bilty":"CRN1220720950","dispatchDate":"2026-05-13","note":"May data (import)","items":[{"id":"s43_1","product":"SS 304 Wire Mesh","opening":5,"dia":2,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":143,"dispatched":true}]},{"id":"seed44","orderNo":"HMB/136","invoiceNo":"HMB/136","poRef":"CONFIRM BY AMIT JI DT:- 12.05.2026","party":"BHARAT PAPER INDUSTRIES","phone":"","date":"2026-05-13","payStatus":"Advance","amount":4366,"dueDate":"2026-04-06","transport":"DEEPAK ROADLINES","bilty":"898185","dispatchDate":"2026-05-13","note":"May data (import)","items":[{"id":"s44_1","product":"SS 304 Wire Mesh","opening":0.65,"dia":0,"length":2000,"width":2000,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":0,"dispatched":true}]},{"id":"seed45","orderNo":"HMB/137","invoiceNo":"HMB/137","poRef":"WHATSAPP BY AMIT JI DT- 26.04.2026","party":"PURVI AGGREGATE SOLUTION PRIVATE LIMITED","phone":"","date":"2026-05-13","payStatus":"Within 30 Days","amount":61596,"dueDate":"2026-05-28","transport":"SHREE AZAD TRANSPORT","bilty":"329319","dispatchDate":"2026-05-13","note":"May data (import)","items":[{"id":"s45_1","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":925,"width":1800,"clamp":"925 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":46,"dispatched":true},{"id":"s45_2","product":"Spring Steel Wire Mesh","opening":32,"dia":8,"length":925,"width":1800,"clamp":"925 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":36.33,"dispatched":true}]},{"id":"seed46","orderNo":"HMB/138","invoiceNo":"HMB/138","poRef":"25JL1NP00005208 DT:- 13.03.2026","party":"PRISM JOHNSON LIMITED ( CEMENT DIVISION )","phone":"","date":"2026-05-13","payStatus":"Within 30 Days","amount":181720,"dueDate":"2026-06-12","transport":"ARC (UP BORDER)","bilty":"N6003263859","dispatchDate":"2026-05-13","note":"May data (import)","items":[{"id":"s46_1","product":"SS 310 Wire Mesh","opening":4.5,"dia":3.5,"length":2500,"width":1000,"clamp":"2500 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":63,"dispatched":true}]},{"id":"seed47","orderNo":"HMB/139","invoiceNo":"HMB/139","poRef":"SEMP/26-27/PO/040","party":"SEMPITERN INDIA","phone":"","date":"2026-05-14","payStatus":"Within 30 Days","amount":78470,"dueDate":"2026-06-13","transport":"BY PORTER","bilty":"CRN1184362699","dispatchDate":"2026-05-14","note":"May data (import)","items":[{"id":"s47_1","product":"SS 310 Wire Mesh","opening":12,"dia":4,"length":8500,"width":820,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":95,"dispatched":true}]},{"id":"seed48","orderNo":"HMB/140","invoiceNo":"HMB/140","poRef":"KCSPL/25-26/GEN/008","party":"KWALITY CONVEYING SYSTEM PVT . LTD","phone":"","date":"2026-05-15","payStatus":"Advance","amount":56640,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-15","note":"May data (import)","items":[{"id":"s48_1","product":"Spring Steel Wire Mesh","opening":25,"dia":6,"length":3488,"width":1540,"clamp":"3488 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":94,"dispatched":true},{"id":"s48_2","product":"Spring Steel Wire Mesh","opening":7,"dia":2.5,"length":15240,"width":1520,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":196,"dispatched":true}]},{"id":"seed49","orderNo":"HMB/141","invoiceNo":"HMB/141","poRef":"CONFIRM BY SUMIT JI , DT . 15.05.2026","party":"DHANGAR FABRICATION","phone":"","date":"2026-05-15","payStatus":"Advance","amount":13529,"dueDate":"2026-04-06","transport":"SYNIDICATE TRANSPORT","bilty":"1695","dispatchDate":"2026-05-15","note":"May data (import)","items":[{"id":"s49_1","product":"Spring Steel Wire Mesh","opening":16,"dia":5,"length":6400,"width":990,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":97.7,"dispatched":true}]},{"id":"seed50","orderNo":"HMB/142","invoiceNo":"HMB/142","poRef":"26PJL2NPP0000175","party":"PRISM JOHNSON LIMITED ( CEMENT DIVISION )","phone":"","date":"2026-05-15","payStatus":"Within 30 Days","amount":46020,"dueDate":"2026-06-14","transport":"ARC (UP BORDER)","bilty":"N6003263885","dispatchDate":"2026-05-15","note":"May data (import)","items":[{"id":"s50_1","product":"MS Wire Mesh","opening":25,"dia":3,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":78,"dispatched":true},{"id":"s50_2","product":"MS Wire Mesh","opening":25,"dia":3,"length":30480,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":157,"dispatched":true},{"id":"s50_3","product":"MS Wire Mesh","opening":25,"dia":3,"length":30480,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":156,"dispatched":true}]},{"id":"seed51","orderNo":"HMB/143","invoiceNo":"HMB/143","poRef":"WHATSAPP BY AMIT JI, DT:- 14.05.2026","party":"TRADE & SERVICE CENTRE","phone":"","date":"2026-05-15","payStatus":"Advance","amount":71833,"dueDate":"2026-04-06","transport":"BY PORTER","bilty":"CRN1803026613","dispatchDate":"2026-05-15","note":"May data (import)","items":[{"id":"s51_1","product":"SS 304 Wire Mesh","opening":25,"dia":4,"length":12801,"width":1092,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":102,"dispatched":true},{"id":"s51_2","product":"SS 304 Wire Mesh","opening":9,"dia":3,"length":800,"width":1530,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":12,"dispatched":true}]},{"id":"seed52","orderNo":"HMB/144","invoiceNo":"HMB/144","poRef":"HMB/197/SO","party":"JAI SHREE WIRE PRODUCTS","phone":"","date":"2026-05-15","payStatus":"Received","amount":47790,"dueDate":"2026-06-14","transport":"BY PORTER","bilty":"CRN1803026613","dispatchDate":"2026-05-15","note":"May data (import)","items":[{"id":"s52_1","product":"SS 304 Wire Mesh","opening":12,"dia":2,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":75,"dispatched":true},{"id":"s52_2","product":"SS 304 Wire Mesh","opening":12,"dia":2,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":74,"dispatched":true}]},{"id":"seed53","orderNo":"HMB/145","invoiceNo":"HMB/145","poRef":"CTSPL/2026-27/282 DTD02.05.26","party":"CRESCENT TECHNO SOLUTIONS PVT LTD","phone":"","date":"2026-05-16","payStatus":"Within 30 Days","amount":20768,"dueDate":"2026-06-15","transport":"BY PORTER","bilty":"CRN2120766258","dispatchDate":"2026-05-16","note":"May data (import)","items":[{"id":"s53_1","product":"SS 304 Wire Mesh","opening":62.5,"dia":4.5,"length":2950,"width":950,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":12.6,"dispatched":true}]},{"id":"seed54","orderNo":"HMB/146","invoiceNo":"HMB/146","poRef":"WHATSAPP BY SUMIT JI DT :- 16.05.2026","party":"MAA GAJANAN ENTERPRISES","phone":"","date":"2026-05-16","payStatus":"Received","amount":96996,"dueDate":"2026-05-31","transport":"LALJI MULJI TRANSPORT","bilty":"0","dispatchDate":"2026-05-16","note":"May data (import)","items":[{"id":"s54_1","product":"Spring Steel Wire Mesh","opening":40,"dia":8,"length":960,"width":1810,"clamp":"930 mm side","pcs":12,"unit":"NOS","crimpM":"","weaveM":"","weight":31,"dispatched":true},{"id":"s54_2","product":"Spring Steel Wire Mesh","opening":20,"dia":5,"length":960,"width":1810,"clamp":"930 mm side","pcs":12,"unit":"NOS","crimpM":"","weaveM":"","weight":24.3,"dispatched":true}]},{"id":"seed55","orderNo":"HMB/147","invoiceNo":"HMB/147","poRef":"HMB/195/SO","party":"DAMODAR PERFORATORS","phone":"","date":"2026-05-16","payStatus":"Received","amount":35046,"dueDate":"2026-05-31","transport":"BY PORTER","bilty":"CRN1913450284","dispatchDate":"2026-05-16","note":"May data (import)","items":[{"id":"s55_1","product":"SS 304 Wire Mesh","opening":4,"dia":2,"length":10058,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":106,"dispatched":true}]},{"id":"seed56","orderNo":"HMB/148","invoiceNo":"HMB/148","poRef":"WHATSAPP BY AMIT JI","party":"TRADE & SERVICE CENTRE","phone":"","date":"2026-05-16","payStatus":"Advance","amount":21339,"dueDate":"2026-04-06","transport":"BY PORTER","bilty":"CRN1913450284","dispatchDate":"2026-05-16","note":"May data (import)","items":[{"id":"s56_1","product":"SS 304 Wire Mesh","opening":3,"dia":2,"length":4000,"width":1050,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":47,"dispatched":true}]},{"id":"seed57","orderNo":"HMB/149","invoiceNo":"HMB/149","poRef":"92600010","party":"ETRACK CRUSHERS PRIVATE LIMITED","phone":"","date":"2026-05-18","payStatus":"Received","amount":12095,"dueDate":"2026-06-02","transport":"FAUJI TRANSPORT","bilty":"14","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s57_1","product":"Spring Steel Wire Mesh","opening":25,"dia":5,"length":1460,"width":2360,"clamp":"1460 mm side","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":42,"dispatched":true}]},{"id":"seed58","orderNo":"HMB/150","invoiceNo":"HMB/150","poRef":"92600014","party":"ETRACK CRUSHERS PRIVATE LIMITED","phone":"","date":"2026-05-18","payStatus":"Received","amount":24485,"dueDate":"2026-06-02","transport":"FAUJI TRANSPORT","bilty":"14","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s58_1","product":"Spring Steel Wire Mesh","opening":15,"dia":3,"length":2360,"width":1460,"clamp":"1460 mm side","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":29,"dispatched":true},{"id":"s58_2","product":"Spring Steel Wire Mesh","opening":18,"dia":4,"length":2360,"width":1460,"clamp":"1460 mm side","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":40,"dispatched":true}]},{"id":"seed59","orderNo":"HMB/151","invoiceNo":"HMB/151","poRef":"DTC/2026-27/PO-01","party":"DURGA TRADING CORPOTRATION","phone":"","date":"2026-05-18","payStatus":"Received","amount":80240,"dueDate":"2026-06-02","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s59_1","product":"Spring Steel Wire Mesh","opening":10,"dia":4,"length":6200,"width":1580,"clamp":"6200 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":179,"dispatched":true},{"id":"s59_2","product":"Spring Steel Wire Mesh","opening":30,"dia":5,"length":6200,"width":1580,"clamp":"6200 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":121,"dispatched":true}]},{"id":"seed60","orderNo":"HMB/152","invoiceNo":"HMB/152","poRef":"what's app confirmation pawan ji","party":"DURGA TRADING CORPOTRATION","phone":"","date":"2026-05-18","payStatus":"Received","amount":44958,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s60_1","product":"SS 304 Wire Mesh","opening":1.75,"dia":0.81,"length":2400,"width":900,"clamp":"","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":21.74,"dispatched":true},{"id":"s60_2","product":"SS 304 Wire Mesh","opening":2.15,"dia":1,"length":2400,"width":900,"clamp":"","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":26.94,"dispatched":true},{"id":"s60_3","product":"SS 304 Wire Mesh","opening":2.2,"dia":0.91,"length":2400,"width":900,"clamp":"","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":22.59,"dispatched":true}]},{"id":"seed61","orderNo":"HMB/153","invoiceNo":"HMB/153","poRef":"CONFIRM BY SUMIT JI DT:- 14.05.2026","party":"WINDBERRY INFRA SOLUTION PVT LTD","phone":"","date":"2026-05-18","payStatus":"Advance","amount":147264,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s61_1","product":"SS 314 Wire Mesh","opening":5,"dia":2.5,"length":300,"width":250,"clamp":"","pcs":78,"unit":"NOS","crimpM":"","weaveM":"","weight":1.1,"dispatched":true}]},{"id":"seed62","orderNo":"HMB/154","invoiceNo":"HMB/154","poRef":"4800053632 dt:- 30.03.2026","party":"PATEL ENGINEERING LTD","phone":"","date":"2026-05-18","payStatus":"Advance","amount":168740,"dueDate":"2026-04-06","transport":"SHANE PUNJAB TEMPO","bilty":"2318","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s62_1","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":1200,"width":2000,"clamp":"","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":52,"dispatched":true},{"id":"s62_2","product":"Spring Steel Wire Mesh","opening":12,"dia":6,"length":1200,"width":2000,"clamp":"","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":62,"dispatched":true}]},{"id":"seed63","orderNo":"HMB/155","invoiceNo":"HMB/155","poRef":"4800054878","party":"PATEL ENGINEERING LTD","phone":"","date":"2026-05-18","payStatus":"Advance","amount":88500,"dueDate":"2026-04-07","transport":"SHANE PUNJAB TEMPO","bilty":"2318","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s63_1","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":1250,"width":1950,"clamp":"1250 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":59,"dispatched":true}]},{"id":"seed64","orderNo":"HMB/156","invoiceNo":"HMB/156","poRef":"4800053563 dt:- 28.03.2026","party":"PATEL ENGINEERING LTD","phone":"","date":"2026-05-18","payStatus":"Advance","amount":404150,"dueDate":"2026-04-08","transport":"SHANE PUNJAB TEMPO","bilty":"2318","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s64_1","product":"Spring Steel Wire Mesh","opening":12.5,"dia":6,"length":1250,"width":1960,"clamp":"1220 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":68.3,"dispatched":true},{"id":"s64_2","product":"Spring Steel Wire Mesh","opening":22.5,"dia":8,"length":1550,"width":1750,"clamp":"1550 mm side","pcs":20,"unit":"NOS","crimpM":"","weaveM":"","weight":75.6,"dispatched":true}]},{"id":"seed65","orderNo":"HMB/157","invoiceNo":"HMB/157","poRef":"HMB/201/SO","party":"NEW NEEL KANTH STONE CRUSHING MILLS","phone":"","date":"2026-05-18","payStatus":"Within 30 Days","amount":220483,"dueDate":"2026-06-02","transport":"BALAJI TEMPO SERVICES","bilty":"444","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s65_1","product":"Spring Steel Wire Mesh","opening":22,"dia":8,"length":1300,"width":1930,"clamp":"1280 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":73,"dispatched":true},{"id":"s65_2","product":"Spring Steel Wire Mesh","opening":14,"dia":6,"length":1300,"width":1930,"clamp":"1280 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":64,"dispatched":true},{"id":"s65_3","product":"Spring Steel Wire Mesh","opening":3.5,"dia":2,"length":1300,"width":1930,"clamp":"1280 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":27,"dispatched":true},{"id":"s65_4","product":"Spring Steel Wire Mesh","opening":3.5,"dia":2,"length":1752,"width":1752,"clamp":"1752 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":37,"dispatched":true}]},{"id":"seed66","orderNo":"HMB/158","invoiceNo":"HMB/158","poRef":"HMB/199/SO","party":"RIDHI SIDHI STONE CRUSHER","phone":"","date":"2026-05-18","payStatus":"Received","amount":44415,"dueDate":"2026-05-28","transport":"BALAJI TEMPO SERVICES","bilty":"445","dispatchDate":"2026-05-18","note":"May data (import)","items":[{"id":"s66_1","product":"Spring Steel Wire Mesh","opening":14,"dia":6,"length":1600,"width":1950,"clamp":"1600 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":82,"dispatched":true},{"id":"s66_2","product":"Spring Steel Wire Mesh","opening":3.5,"dia":2,"length":1550,"width":1473,"clamp":"1524 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":31,"dispatched":true},{"id":"s66_3","product":"Spring Steel Wire Mesh","opening":3,"dia":2,"length":1550,"width":1473,"clamp":"1524 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":33,"dispatched":true}]},{"id":"seed67","orderNo":"HMB/159","invoiceNo":"HMB/159","poRef":"CONFIRM BY SUMIT JI DT:- 14.05.2026","party":"KAPMIX MACHINERY PRIVATE LIMITED","phone":"","date":"2026-05-20","payStatus":"Advance","amount":54280,"dueDate":"2026-05-20","transport":"BY PORTER","bilty":"CRN2018058213","dispatchDate":"2026-05-20","note":"May data (import)","items":[{"id":"s67_1","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":1820,"width":900,"clamp":"1820 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":33.6,"dispatched":true},{"id":"s67_2","product":"Spring Steel Wire Mesh","opening":2,"dia":1.2,"length":1820,"width":900,"clamp":"1820 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":18,"dispatched":true},{"id":"s67_3","product":"SS 304 Wire Mesh","opening":1,"dia":0.15,"length":1820,"width":900,"clamp":"1820 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":9.5,"dispatched":true}]},{"id":"seed68","orderNo":"HMB/160","invoiceNo":"HMB/160","poRef":"HMB/13/SO","party":"MEMCO ENGINEERING PVT. LTD","phone":"","date":"2026-05-20","payStatus":"Advance","amount":155000,"dueDate":"2026-06-19","transport":"SUGAM PARIWAHAN PRIVATE LIMITED UPBORDER","bilty":"17710002133","dispatchDate":"2026-05-20","note":"May data (import)","items":[{"id":"s68_1","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":1250,"width":1960,"clamp":"1250 mm side","pcs":25,"unit":"NOS","crimpM":"","weaveM":"","weight":42,"dispatched":true}]},{"id":"seed69","orderNo":"HMB/161","invoiceNo":"HMB/161","poRef":"HMB/234/SO","party":"SUBH LAABH MICRONS","phone":"","date":"2026-05-20","payStatus":"Within 30 Days","amount":5900,"dueDate":"2026-06-19","transport":"V TRANS UP BORDER","bilty":"4122138623","dispatchDate":"2026-05-20","note":"May data (import)","items":[{"id":"s69_1","product":"Spring Steel Wire Mesh","opening":3.5,"dia":2,"length":985,"width":2400,"clamp":"985 mm side","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":27,"dispatched":true}]},{"id":"seed70","orderNo":"HMB/162","invoiceNo":"HMB/162","poRef":"HMB/235/SO","party":"SAMSON AUTOMATION TECHNOLOGIES","phone":"","date":"2026-05-20","payStatus":"Advance","amount":9440,"dueDate":"2026-04-06","transport":"SHIMLA MANALI GOODS TRANSPORT","bilty":"226677","dispatchDate":"2026-05-20","note":"May data (import)","items":[{"id":"s70_1","product":"SS 304 Wire Mesh","opening":40,"dia":5,"length":0,"width":400,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":6,"dispatched":true}]},{"id":"seed71","orderNo":"HMB/163","invoiceNo":"HMB/163","poRef":"WHATSAPP BY SUMIT JI, DT :- 20.05.2026","party":"TECH WELL INDIA","phone":"","date":"2026-05-20","payStatus":"Advance","amount":26610,"dueDate":"2026-04-06","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-20","note":"May data (import)","items":[{"id":"s71_1","product":"SS 304 Wire Mesh","opening":25,"dia":3,"length":16500,"width":940,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":66,"dispatched":true}]},{"id":"seed72","orderNo":"HMB/164","invoiceNo":"HMB/164","poRef":"WHATSAPP BY AMIT JI DT:- 28.04.2026","party":"UTTARAKHAND STONE PRODUCTS PVT . LTD","phone":"","date":"2026-05-21","payStatus":"Within 30 Days","amount":466100,"dueDate":"2026-05-31","transport":"FAUJI TRANSPORT","bilty":"16","dispatchDate":"2026-05-21","note":"May data (import)","items":[{"id":"s72_1","product":"Spring Steel Wire Mesh","opening":26,"dia":8,"length":1828,"width":1828,"clamp":"","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":80.6,"dispatched":true},{"id":"s72_2","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1828,"width":1828,"clamp":"","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":85,"dispatched":true},{"id":"s72_3","product":"MS Wire Mesh","opening":80,"dia":10,"length":1524,"width":1828,"clamp":"","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":253.81,"dispatched":true},{"id":"s72_4","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":15240,"width":1828,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":422,"dispatched":true},{"id":"s72_5","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":15240,"width":1828,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":417,"dispatched":true},{"id":"s72_6","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":15240,"width":1828,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":410,"dispatched":true},{"id":"s72_7","product":"Spring Steel Wire Mesh","opening":5,"dia":3,"length":15240,"width":1828,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":415,"dispatched":true}]},{"id":"seed73","orderNo":"HMB/165","invoiceNo":"HMB/165","poRef":"CONFIRM BY AMIT JI DT:- 22.05.2026","party":"BLACKSMITH INDUSTRIES PRIVATE LIMITED","phone":"","date":"2026-05-22","payStatus":"Received","amount":14160,"dueDate":"2026-06-11","transport":"KANPUR DELHI TRANSPORT","bilty":"UPB6004871","dispatchDate":"2026-05-22","note":"May data (import)","items":[{"id":"s73_1","product":"Spring Steel Wire Mesh","opening":50,"dia":8,"length":1340,"width":1480,"clamp":"1340 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":32.4,"dispatched":true}]},{"id":"seed74","orderNo":"HMB/166","invoiceNo":"HMB/166","poRef":"WHATSAPP BY AMIT JI DT:- 20.05.2026","party":"ALLIED MACHINERY & TOOLS CORPORATION","phone":"","date":"2026-05-22","payStatus":"Within 30 Days","amount":69054,"dueDate":"2026-06-21","transport":"DELHI KANPUR TRANSPORT CO. UP BORDER/ GZB","bilty":"7940","dispatchDate":"2026-05-22","note":"May data (import)","items":[{"id":"s74_1","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":308,"unit":"KG","crimpM":"","weaveM":"","weight":308,"dispatched":true}]},{"id":"seed75","orderNo":"HMB/167","invoiceNo":"HMB/167","poRef":"HMB/191/SO","party":"BL AGGARWAL INFRA PRIVATE LIMITED","phone":"","date":"2026-05-22","payStatus":"Received","amount":49560,"dueDate":"2026-06-21","transport":"ACPL AVINASH CARGO PVT LTD","bilty":"2645100890","dispatchDate":"2026-05-22","note":"May data (import)","items":[{"id":"s75_1","product":"SS 304 Wire Mesh","opening":1.2,"dia":0.6,"length":1540,"width":2070,"clamp":"1540 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":17,"dispatched":true}]},{"id":"seed76","orderNo":"HMB/168","invoiceNo":"HMB/168","poRef":"HMB/192/SO","party":"RAJASTHAN MINING & MINERALS","phone":"","date":"2026-05-22","payStatus":"Received","amount":62894,"dueDate":"2026-06-21","transport":"SHREE JAIN ROADWAYS","bilty":"UPB55539","dispatchDate":"2026-05-22","note":"May data (import)","items":[{"id":"s76_1","product":"Spring Steel Wire Mesh","opening":5,"dia":2,"length":1460,"width":2360,"clamp":"1460 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":33,"dispatched":true},{"id":"s76_2","product":"Spring Steel Wire Mesh","opening":15,"dia":6,"length":1390,"width":1480,"clamp":"1390 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":49.6,"dispatched":true},{"id":"s76_3","product":"Spring Steel Wire Mesh","opening":15,"dia":6,"length":660,"width":1480,"clamp":"660 mm side","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":23.5,"dispatched":true}]},{"id":"seed77","orderNo":"HMB/169","invoiceNo":"HMB/169","poRef":"WHATSAPP BY AMIT JI DT:- 16.5.2026","party":"LAKSHMI TRADERS & ENGINEERS","phone":"","date":"2026-05-23","payStatus":"Within 30 Days","amount":24338,"dueDate":"2026-05-30","transport":"BY PORTER","bilty":"CRN2096902518","dispatchDate":"2026-05-23","note":"May data (import)","items":[{"id":"s77_1","product":"SS 304 Wire Mesh","opening":20,"dia":2.5,"length":20000,"width":1000,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":74,"dispatched":true}]},{"id":"seed78","orderNo":"HMB/170","invoiceNo":"HMB/170","poRef":"HMB/211/SO","party":"KALUWALA CONSTRUCTION PVT.LTD","phone":"","date":"2026-05-23","payStatus":"Advance","amount":25960,"dueDate":"2026-05-30","transport":"SHREE AZAD TRANSPORT","bilty":"448927","dispatchDate":"2026-05-23","note":"May data (import)","items":[{"id":"s78_1","product":"Spring Steel Wire Mesh","opening":40,"dia":8,"length":1066,"width":1651,"clamp":"1066 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":31.5,"dispatched":true}]},{"id":"seed79","orderNo":"HMB/172","invoiceNo":"HMB/172","poRef":"HMB/246/SO","party":"NEW NEEL KANTH STONE CRUSHING MILLS","phone":"","date":"2026-05-23","payStatus":"Within 30 Days","amount":57230,"dueDate":"2026-06-07","transport":"ARYAVART ROADLINES","bilty":"1856","dispatchDate":"2026-05-23","note":"May data (import)","items":[{"id":"s79_1","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":1300,"width":1930,"clamp":"1280 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":51,"dispatched":true}]},{"id":"seed80","orderNo":"HMB/173","invoiceNo":"HMB/173","poRef":"RSEC/HMB/0526/1215","party":"R S ENGINEERS & CONSULTANTS","phone":"","date":"2026-05-23","payStatus":"Advance","amount":130390,"dueDate":"2026-06-07","transport":"VRL LOGISTICS (UP BORDER)","bilty":"0","dispatchDate":"2026-05-23","note":"May data (import)","items":[{"id":"s80_1","product":"Spring Steel Wire Mesh","opening":31.5,"dia":8,"length":1210,"width":1850,"clamp":"1210 mm side","pcs":5,"unit":"NOS","crimpM":"","weaveM":"","weight":49.5,"dispatched":true},{"id":"s80_2","product":"Spring Steel Wire Mesh","opening":26.5,"dia":6,"length":1210,"width":1850,"clamp":"1210 mm side","pcs":5,"unit":"NOS","crimpM":"","weaveM":"","weight":36.5,"dispatched":true},{"id":"s80_3","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":1210,"width":1850,"clamp":"1210 mm side","pcs":5,"unit":"NOS","crimpM":"","weaveM":"","weight":34.5,"dispatched":true},{"id":"s80_4","product":"Spring Steel Wire Mesh","opening":42.5,"dia":10,"length":1210,"width":1850,"clamp":"1210 mm side","pcs":5,"unit":"NOS","crimpM":"","weaveM":"","weight":58.5,"dispatched":true}]},{"id":"seed81","orderNo":"HMB/174","invoiceNo":"HMB/174","poRef":"WHATSAPP BY AMIT JI DT:- 24-4-2026","party":"A & J MINES AND MINERAL LLP","phone":"","date":"2026-05-23","payStatus":"Within 30 Days","amount":200600,"dueDate":"2026-06-07","transport":"SHREE JAIN ROADWAYS","bilty":"UPB55572","dispatchDate":"2026-05-23","note":"May data (import)","items":[{"id":"s81_1","product":"Spring Steel Wire Mesh","opening":0,"dia":8,"length":1400,"width":1470,"clamp":"1400 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":50.5,"dispatched":true},{"id":"s81_2","product":"Spring Steel Wire Mesh","opening":0,"dia":8,"length":1400,"width":1500,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":56.5,"dispatched":true},{"id":"s81_3","product":"Spring Steel Wire Mesh","opening":12,"dia":8,"length":1870,"width":1760,"clamp":"1870 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":153,"dispatched":true}]},{"id":"seed82","orderNo":"HMB/175","invoiceNo":"HMB/175","poRef":"BY EMAIL, DT:- 24.04.2026","party":"SOLID MATERIAL CONVEYING SYSTEM","phone":"","date":"2026-05-25","payStatus":"Advance","amount":56050,"dueDate":"2026-06-09","transport":"BALAJI TEMPO SERVICES","bilty":"451","dispatchDate":"2026-05-25","note":"May data (import)","items":[{"id":"s82_1","product":"Spring Steel Wire Mesh","opening":16,"dia":6,"length":2550,"width":3250,"clamp":"","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":177,"dispatched":true}]},{"id":"seed83","orderNo":"HMB/176","invoiceNo":"HMB/176","poRef":"26-27/PO-0005","party":"UNIVERSAL WIRE PRODUCTS","phone":"","date":"2026-05-25","payStatus":"Within 30 Days","amount":32450,"dueDate":"2026-06-09","transport":"LALJI MULJI TRANSPORT","bilty":"45816128","dispatchDate":"2026-05-25","note":"May data (import)","items":[{"id":"s83_1","product":"Spring Steel Wire Mesh","opening":50,"dia":8,"length":2000,"width":1180,"clamp":"2000 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":40,"dispatched":true},{"id":"s83_2","product":"Spring Steel Wire Mesh","opening":10,"dia":5,"length":2000,"width":1180,"clamp":"2000 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":60,"dispatched":true}]},{"id":"seed84","orderNo":"HMB/177","invoiceNo":"HMB/177","poRef":"HMB/243/SO","party":"KAMIL HASAN CONTRACTOR","phone":"","date":"2026-05-25","payStatus":"Advance","amount":16391,"dueDate":"2026-04-06","transport":"U.P. DELHI GOODS CORPORATION","bilty":"3370","dispatchDate":"2026-05-25","note":"May data (import)","items":[{"id":"s84_1","product":"Spring Steel Wire Mesh","opening":2,"dia":1.2,"length":3352,"width":1219,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":25,"dispatched":true},{"id":"s84_2","product":"Spring Steel Wire Mesh","opening":3,"dia":2,"length":3352,"width":1550,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":56,"dispatched":true}]},{"id":"seed85","orderNo":"HMB/178","invoiceNo":"HMB/178","poRef":"LE/LE20M087/POD/26/000303","party":"LARSEN & TOURBO LIMITED","phone":"","date":"2026-05-25","payStatus":"Within 30 Days","amount":45595,"dueDate":"2026-06-24","transport":"SUGAM PARIWAHAN PRIVATE LIMITED UPBORDER","bilty":"17710002162","dispatchDate":"2026-05-25","note":"May data (import)","items":[{"id":"s85_1","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1180,"width":1760,"clamp":"1180 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":57,"dispatched":true}]},{"id":"seed86","orderNo":"HMB/179","invoiceNo":"HMB/179","poRef":"03/26-27 DT:- 27.04.2026","party":"PETRO MECHANICAL","phone":"","date":"2026-05-26","payStatus":"Advance","amount":149941,"dueDate":"2026-06-25","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-26","note":"May data (import)","items":[{"id":"s86_1","product":"Spring Steel Wire Mesh","opening":8,"dia":5,"length":2050,"width":1390,"clamp":"2050 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":85,"dispatched":true},{"id":"s86_2","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":2050,"width":1390,"clamp":"2050 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":73,"dispatched":true},{"id":"s86_3","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":1000,"width":2150,"clamp":"1000 mm side","pcs":7,"unit":"NOS","crimpM":"","weaveM":"","weight":52.5,"dispatched":true},{"id":"s86_4","product":"Spring Steel Wire Mesh","opening":8,"dia":5,"length":1000,"width":2150,"clamp":"1000 mm side","pcs":7,"unit":"NOS","crimpM":"","weaveM":"","weight":59,"dispatched":true}]},{"id":"seed87","orderNo":"HMB/180","invoiceNo":"HMB/180","poRef":"WHATSAPP BY SUMIT JI DT:- 26.5.2026","party":"WIRE NETTING STORES","phone":"","date":"2026-05-26","payStatus":"Advance","amount":34456,"dueDate":"2026-04-06","transport":"NEW AKASHDEEP TRANSPORT","bilty":"67198","dispatchDate":"2026-05-26","note":"May data (import)","items":[{"id":"s87_1","product":"SS 304 Wire Mesh","opening":8,"dia":4,"length":1200,"width":2500,"clamp":"","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":54.5,"dispatched":true}]},{"id":"seed88","orderNo":"HMB/181","invoiceNo":"HMB/181","poRef":"LE/LE23M073/POD/26/00018","party":"LARSEN & TOURBO LIMITED","phone":"","date":"2026-05-26","payStatus":"Within 30 Days","amount":44840,"dueDate":"2026-06-25","transport":"AASH LOGISITC","bilty":"GZB-2540","dispatchDate":"2026-05-26","note":"May data (import)","items":[{"id":"s88_1","product":"Spring Steel Wire Mesh","opening":38,"dia":8,"length":1180,"width":1760,"clamp":"1160 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":40,"dispatched":true}]},{"id":"seed89","orderNo":"HMB/182","invoiceNo":"HMB/182","poRef":"LE/LE23M613/POD/26/002182","party":"LARSEN & TOURBO LIMITED","phone":"","date":"2026-05-27","payStatus":"Within 30 Days","amount":129575,"dueDate":"2026-06-26","transport":"LALJI MULJI TRANSPORT","bilty":"45806828","dispatchDate":"2026-05-27","note":"May data (import)","items":[{"id":"s89_1","product":"Spring Steel Wire Mesh","opening":22.5,"dia":8,"length":1220,"width":1490,"clamp":"1220 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":52,"dispatched":true},{"id":"s89_2","product":"Spring Steel Wire Mesh","opening":22.5,"dia":8,"length":700,"width":1490,"clamp":"700 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":30,"dispatched":true},{"id":"s89_3","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":1220,"width":1490,"clamp":"1220 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":29,"dispatched":true},{"id":"s89_4","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":700,"width":1490,"clamp":"700 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":17,"dispatched":true},{"id":"s89_5","product":"Spring Steel Wire Mesh","opening":4.75,"dia":3,"length":1220,"width":1490,"clamp":"1220 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":35,"dispatched":true},{"id":"s89_6","product":"Spring Steel Wire Mesh","opening":4.75,"dia":3,"length":700,"width":1490,"clamp":"700 mm side","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":20,"dispatched":true},{"id":"s89_7","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":1400,"width":1466,"clamp":"1380 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":33,"dispatched":true},{"id":"s89_8","product":"Spring Steel Wire Mesh","opening":22.5,"dia":8,"length":1400,"width":1466,"clamp":"1380 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":58.3,"dispatched":true},{"id":"s89_9","product":"Spring Steel Wire Mesh","opening":12.5,"dia":6,"length":1400,"width":1466,"clamp":"1380 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":54,"dispatched":true}]},{"id":"seed90","orderNo":"HMB/183","invoiceNo":"HMB/183","poRef":"LE/LE24M394/POD/26/002326","party":"LARSEN & TOURBO LIMITED","phone":"","date":"2026-05-27","payStatus":"Within 30 Days","amount":269606,"dueDate":"2026-06-26","transport":"ACPL AVINASH CARGO PVT LTD","bilty":"2645100967","dispatchDate":"2026-05-27","note":"May data (import)","items":[{"id":"s90_1","product":"Spring Steel Wire Mesh","opening":14,"dia":6,"length":1170,"width":1780,"clamp":"1170 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":53,"dispatched":true},{"id":"s90_2","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1170,"width":1780,"clamp":"1170 mm side","pcs":8,"unit":"NOS","crimpM":"","weaveM":"","weight":57.6,"dispatched":true},{"id":"s90_3","product":"Spring Steel Wire Mesh","opening":22.5,"dia":6,"length":1250,"width":1770,"clamp":"1250 mm side","pcs":16,"unit":"NOS","crimpM":"","weaveM":"","weight":37.2,"dispatched":true},{"id":"s90_4","product":"Spring Steel Wire Mesh","opening":12.5,"dia":6,"length":1250,"width":1770,"clamp":"1250 mm side","pcs":12,"unit":"NOS","crimpM":"","weaveM":"","weight":58,"dispatched":true}]},{"id":"seed91","orderNo":"HMB/184","invoiceNo":"HMB/184","poRef":"CSI/25-26/026 dt. 27-May-26","party":"CHOURASIYA STONE INDUSTRIES","phone":"","date":"2026-05-27","payStatus":"Within 30 Days","amount":108796,"dueDate":"2026-06-26","transport":"BOMBAY KANDLA TRANSPORT","bilty":"7918","dispatchDate":"2026-05-27","note":"May data (import)","items":[{"id":"s91_1","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":1240,"width":1770,"clamp":"1240 mm side","pcs":12,"unit":"NOS","crimpM":"","weaveM":"","weight":34,"dispatched":true},{"id":"s91_2","product":"Spring Steel Wire Mesh","opening":4.75,"dia":3,"length":1240,"width":2060,"clamp":"1240 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":45,"dispatched":true}]},{"id":"seed92","orderNo":"HMB/185","invoiceNo":"HMB/185","poRef":"27600025","party":"MOTHERSON AUTOMOTIVE ELASTOMERS TECHNOLOGY","phone":"","date":"2026-05-27","payStatus":"Received","amount":8549,"dueDate":"2026-06-26","transport":"BY PORTER","bilty":"CRN1358187410","dispatchDate":"2026-05-27","note":"May data (import)","items":[{"id":"s92_1","product":"SS 304 Wire Mesh","opening":0,"dia":0,"length":321,"width":26,"clamp":"","pcs":100,"unit":"NOS","crimpM":"","weaveM":"","weight":0,"dispatched":true},{"id":"s92_2","product":"SS 304 Wire Mesh","opening":0,"dia":0,"length":322,"width":30,"clamp":"","pcs":107,"unit":"NOS","crimpM":"","weaveM":"","weight":0,"dispatched":true}]},{"id":"seed93","orderNo":"HMB/186","invoiceNo":"HMB/186","poRef":"GVN/26-27/024","party":"GVN MATERIAL HANDLING PVT . LTD","phone":"","date":"2026-05-28","payStatus":"Received","amount":518374,"dueDate":"2026-06-07","transport":"FAUJI TRANSPORT","bilty":"20","dispatchDate":"2026-05-28","note":"May data (import)","items":[{"id":"s93_1","product":"Spring Steel Wire Mesh","opening":8,"dia":4,"length":1000,"width":1910,"clamp":"1000 mm side","pcs":10,"unit":"NOS","crimpM":"","weaveM":"","weight":40,"dispatched":true},{"id":"s93_2","product":"Spring Steel Wire Mesh","opening":10,"dia":3,"length":1010,"width":1900,"clamp":"1010 mm side","pcs":30,"unit":"NOS","crimpM":"","weaveM":"","weight":23.7,"dispatched":true},{"id":"s93_3","product":"Spring Steel Wire Mesh","opening":8,"dia":3,"length":1010,"width":1900,"clamp":"1010 mm side","pcs":30,"unit":"NOS","crimpM":"","weaveM":"","weight":27.3,"dispatched":true},{"id":"s93_4","product":"SS 304 Wire Mesh","opening":8,"dia":3,"length":3000,"width":1140,"clamp":"3000 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":56,"dispatched":true},{"id":"s93_5","product":"Spring Steel Wire Mesh","opening":10,"dia":3,"length":3000,"width":1140,"clamp":"3000 mm side","pcs":6,"unit":"NOS","crimpM":"","weaveM":"","weight":53,"dispatched":true}]},{"id":"seed94","orderNo":"HMB/187","invoiceNo":"HMB/187","poRef":"WHATSAPP BY SUMIT JI DT:- 14.05.2026","party":"GURU HARGOBIND MECHANICAL WORKS","phone":"","date":"2026-05-28","payStatus":"Advance","amount":78293,"dueDate":"2026-04-02","transport":"SHREE JAGDAMBA TRANSPORT","bilty":"2293","dispatchDate":"2026-05-28","note":"May data (import)","items":[{"id":"s94_1","product":"Spring Steel Wire Mesh","opening":14,"dia":8,"length":1200,"width":1515,"clamp":"1200 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":71,"dispatched":true},{"id":"s94_2","product":"Spring Steel Wire Mesh","opening":14,"dia":8,"length":1000,"width":1515,"clamp":"1000 mm side","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":59.3,"dispatched":true},{"id":"s94_3","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1200,"width":1515,"clamp":"1200 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":49,"dispatched":true},{"id":"s94_4","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1000,"width":1515,"clamp":"1000 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":42,"dispatched":true}]},{"id":"seed95","orderNo":"HMB/188","invoiceNo":"HMB/188","poRef":"WHATSAPP BY AMIT JI DT:- 21.04.2026","party":"SHREENATHJI STONE QUARRY","phone":"","date":"2026-05-28","payStatus":"Within 30 Days","amount":224200,"dueDate":"2026-06-27","transport":"VIJAY LAKSHMI TRANSPORT GZB","bilty":"120948","dispatchDate":"2026-05-28","note":"May data (import)","items":[{"id":"s95_1","product":"Spring Steel Wire Mesh","opening":4.5,"dia":1.6,"length":1524,"width":1524,"clamp":"1524 mm side","pcs":20,"unit":"NOS","crimpM":"","weaveM":"","weight":19,"dispatched":true},{"id":"s95_2","product":"Spring Steel Wire Mesh","opening":27,"dia":6,"length":1524,"width":1981,"clamp":"1524 mm side","pcs":20,"unit":"NOS","crimpM":"","weaveM":"","weight":45,"dispatched":true}]},{"id":"seed96","orderNo":"HMB/189","invoiceNo":"HMB/189","poRef":"HMB/226/SO","party":"NEW TECH ENGINEERS","phone":"","date":"2026-05-28","payStatus":"Advance","amount":50740,"dueDate":"2026-04-06","transport":"BOMBAY BAREILLY GOODS CARRIESR","bilty":"4775","dispatchDate":"2026-05-28","note":"May data (import)","items":[{"id":"s96_1","product":"Spring Steel Wire Mesh","opening":10,"dia":2,"length":15240,"width":1219,"clamp":"","pcs":1,"unit":"NOS","crimpM":"","weaveM":"","weight":85,"dispatched":true}]},{"id":"seed97","orderNo":"HMB/190","invoiceNo":"HMB/190","poRef":"WHATSAPP BY SUMIT JI DT:- 14.05.2026","party":"ALLIED ENTERPRISES","phone":"","date":"2026-05-29","payStatus":"Within 30 Days","amount":58410,"dueDate":"2026-06-28","transport":"ARRANGED BY CUSTOMER","bilty":"HAND DELIVERY","dispatchDate":"2026-05-29","note":"May data (import)","items":[{"id":"s97_1","product":"Spring Steel Wire Mesh","opening":9,"dia":4,"length":1040,"width":1890,"clamp":"","pcs":15,"unit":"NOS","crimpM":"","weaveM":"","weight":32.5,"dispatched":true}]},{"id":"seed98","orderNo":"HMB/191","invoiceNo":"HMB/191","poRef":"CONFIRM BY SUMIT JI DT:- 14.06.2026","party":"BL AGGARWAL INFRA PRIVATE LIMITED","phone":"","date":"2026-05-29","payStatus":"Received","amount":185732,"dueDate":"2026-06-28","transport":"ACPL AVINASH CARGO PVT LTD","bilty":"2645100998","dispatchDate":"2026-05-29","note":"May data (import)","items":[{"id":"s98_1","product":"Spring Steel Wire Mesh","opening":26,"dia":8,"length":1540,"width":2070,"clamp":"1540 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":81,"dispatched":true},{"id":"s98_2","product":"Spring Steel Wire Mesh","opening":25,"dia":8,"length":1540,"width":2070,"clamp":"1540 mm side","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":84,"dispatched":true},{"id":"s98_3","product":"Spring Steel Wire Mesh","opening":12,"dia":6,"length":1540,"width":2070,"clamp":"1540 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":87,"dispatched":true},{"id":"s98_4","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":1540,"width":2070,"clamp":"1540 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":48,"dispatched":true},{"id":"s98_5","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":1220,"width":1830,"clamp":"1220 mm side","pcs":7,"unit":"NOS","crimpM":"","weaveM":"","weight":34,"dispatched":true},{"id":"s98_6","product":"Spring Steel Wire Mesh","opening":32,"dia":10,"length":1220,"width":1830,"clamp":"1220 mm side","pcs":3,"unit":"NOS","crimpM":"","weaveM":"","weight":48,"dispatched":true}]},{"id":"seed99","orderNo":"HMB/192","invoiceNo":"HMB/192","poRef":"0300-04-2627-000096","party":"LSC INFRATECH LIMITED","phone":"","date":"2026-05-29","payStatus":"Within 30 Days","amount":46964,"dueDate":"2026-06-28","transport":"U.P. DELHI GOODS CORPORATION","bilty":"3639","dispatchDate":"2026-05-29","note":"May data (import)","items":[{"id":"s99_1","product":"Spring Steel Wire Mesh","opening":18,"dia":8,"length":1524,"width":1828,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":91,"dispatched":true}]},{"id":"seed100","orderNo":"HMB/193","invoiceNo":"HMB/193","poRef":"0300-06-2627-000202","party":"LSC INFRATECH LIMITED","phone":"","date":"2026-05-29","payStatus":"Within 30 Days","amount":35400,"dueDate":"2026-06-28","transport":"U.P. DELHI GOODS CORPORATION","bilty":"3638","dispatchDate":"2026-05-29","note":"May data (import)","items":[{"id":"s100_1","product":"Spring Steel Wire Mesh","opening":6,"dia":4,"length":1524,"width":2108,"clamp":"","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":70.25,"dispatched":true}]},{"id":"seed101","orderNo":"HMB/194","invoiceNo":"HMB/194","poRef":"HMB/259/SO","party":"YASH METAL CRAFTS","phone":"","date":"2026-05-29","payStatus":"Within 30 Days","amount":70800,"dueDate":"2026-06-28","transport":"SHIMLA MANALI GOODS TRANSPORT","bilty":"UPB227068","dispatchDate":"2026-05-29","note":"May data (import)","items":[{"id":"s101_1","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":500,"unit":"NOS","crimpM":"","weaveM":"","weight":34.4,"dispatched":true}]},{"id":"seed102","orderNo":"HMB/195","invoiceNo":"HMB/195","poRef":"HMB/260/SO","party":"AGGARWAL MACHINERY","phone":"","date":"2026-05-29","payStatus":"Within 30 Days","amount":35400,"dueDate":"2026-06-28","transport":"DELHI PUNJAB TRANSPORT","bilty":"UPB260006638","dispatchDate":"2026-05-29","note":"May data (import)","items":[{"id":"s102_1","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":250,"unit":"NOS","crimpM":"","weaveM":"","weight":34.4,"dispatched":true}]},{"id":"seed103","orderNo":"HMB/196","invoiceNo":"HMB/196","poRef":"WHATSAPP BY AMIT JI DT :- 12-05-2026","party":"BALAJI STONE COMPANY","phone":"","date":"2026-05-29","payStatus":"Advance","amount":108324,"dueDate":"2026-04-07","transport":"FAUJI TRANSPORT","bilty":"23","dispatchDate":"2026-05-29","note":"May data (import)","items":[{"id":"s103_1","product":"Spring Steel Wire Mesh","opening":4,"dia":3,"length":1250,"width":1750,"clamp":"1250 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":45.4,"dispatched":true},{"id":"s103_2","product":"Spring Steel Wire Mesh","opening":24,"dia":8,"length":1250,"width":1750,"clamp":"1250 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":60,"dispatched":true},{"id":"s103_3","product":"Spring Steel Wire Mesh","opening":12,"dia":6,"length":1250,"width":1750,"clamp":"1250 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":61,"dispatched":true},{"id":"s103_4","product":"Spring Steel Wire Mesh","opening":6,"dia":3,"length":1250,"width":1750,"clamp":"1250 mm side","pcs":4,"unit":"NOS","crimpM":"","weaveM":"","weight":34,"dispatched":true},{"id":"s103_5","product":"Spring Steel Wire Mesh","opening":0,"dia":0,"length":0,"width":0,"clamp":"","pcs":2,"unit":"NOS","crimpM":"","weaveM":"","weight":22.5,"dispatched":true}]},{"id":"seed104","orderNo":"HMB/197","invoiceNo":"HMB/197","poRef":"HMB/249/SO","party":"MRK INDUSTRIES","phone":"","date":"2026-05-30","payStatus":"Advance","amount":116900,"dueDate":"2026-04-08","transport":"BY PORTER","bilty":"CRN1295499130","dispatchDate":"2026-05-30","note":"May data (import)","items":[{"id":"s104_1","product":"SS 304 Wire Mesh","opening":25,"dia":5,"length":550,"width":1100,"clamp":"","pcs":20,"unit":"NOS","crimpM":"","weaveM":"","weight":7,"dispatched":true},{"id":"s104_2","product":"SS 304 Wire Mesh","opening":39,"dia":4,"length":20000,"width":600,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":63,"dispatched":true},{"id":"s104_3","product":"SS 310 Wire Mesh","opening":0,"dia":5,"length":0,"width":0,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":8,"dispatched":true},{"id":"s104_4","product":"SS 304 Wire Mesh","opening":18,"dia":3,"length":15000,"width":640,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":58,"dispatched":true},{"id":"s104_5","product":"SS 304 Wire Mesh","opening":25,"dia":3,"length":10000,"width":640,"clamp":"","pcs":2,"unit":"ROLL","crimpM":"","weaveM":"","weight":27.5,"dispatched":true},{"id":"s104_6","product":"SS 304 Wire Mesh","opening":0,"dia":5,"length":0,"width":0,"clamp":"","pcs":1,"unit":"ROLL","crimpM":"","weaveM":"","weight":5,"dispatched":true}]}],"transports":["AASH LOGISITC","ACPL AVINASH CARGO PVT LTD","ARC (UP BORDER)","ARRANGED BY CUSTOMER","ARRANGED BY CUSTOMER PORTER","ARYAVART ROADLINES","BALAJI TEMPO SERVICES","BOMBAY BAREILLY GOODS CARRIESR","BOMBAY KANDLA TRANSPORT","BY PORTER","BY ROAD","DEEPAK ROADLINES","DELHI HUBLI ROADWAYS","DELHI KANPUR TRANSPORT CO. UP BORDER/ GZB","DELHI PUNJAB TRANSPORT","FAUJI TRANSPORT","KANPUR DELHI TRANSPORT","LALJI MULJI TRANSPORT","NAGPUR TRANSPORT","NEW AKASHDEEP TRANSPORT","NEW JAGDAMBA TRANSPORT","SHANE PUNJAB TEMPO","SHIMLA MANALI GOODS TRANSPORT","SHREE AZAD TRANSPORT","SHREE JAGDAMBA TRANSPORT","SHREE JAIN ROADWAYS","SUGAM PARIWAHAN PRIVATE LIMITED UPBORDER","SYNIDICATE TRANSPORT","TRANS INDIA FREIGHT CARRIERS","U.P. DELHI GOODS CORPORATION","V TRANS UP BORDER","VIJAY LAKSHMI TRANSPORT GZB","VRL LOGISTICS (UP BORDER)"],"crimp":["MC1","MC2","MC3","MC4","MC5"],"weave":["MM1","MM2","MM3","MM4"]};
+
+/* ---------- storage ---------- */
+const KEY = "hmb_order_dispatch_v1";
+function uid(){ return "id_"+Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function num(v){ return Number(v||0); }
+function round2(v){ return Math.round(num(v)*100)/100; }
+function fmtDate(d){
+  if(!d) return "";
+  const dt=new Date(d+"T00:00:00"); if(isNaN(dt)) return d;
+  const m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][dt.getMonth()];
+  return `${String(dt.getDate()).padStart(2,"0")}-${m}-${String(dt.getFullYear()).slice(2)}`;
+}
+function dueDateOf(o){
+  if(o.dueDate) return o.dueDate;
+  if(!o.invoiceDate) return "";
+  const add=o.payStatus==="Within 15 Days"?15:o.payStatus==="Within 30 Days"?30:0;
+  if(!add) return "";
+  const dt=new Date(o.invoiceDate+"T00:00:00"); if(isNaN(dt)) return "";
+  dt.setDate(dt.getDate()+add); return dt.toISOString().slice(0,10);
+}
+function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+const DEFAULT_CRIMP = ["MC1","MC2","MC3","MC4","MC5"];
+const DEFAULT_WEAVE = ["MM1","MM2","MM3","MM4"];
+const DEFAULT_PRODUCTS = ["Spring Steel Wire Mesh","High Carbon Steel Wire Mesh","SS 304 Wire Mesh","SS 316 Wire Mesh","SS 310 Wire Mesh","MS Wire Mesh","GI Wire Mesh","Perforated Sheet","Vibrating Screen Cloth"];
+
+const SEEDKEY = "hmb_od_seed_may2026_v2";
+const STOCKKEY = "hmb_stock_seed_v1";
+function baseDB(){ return {orders:[], crimp:DEFAULT_CRIMP.slice(), weave:DEFAULT_WEAVE.slice(), products:DEFAULT_PRODUCTS.slice(), transports:[], stockIn:[], stockOut:[], stockScrap:[], settings:{wastagePct:0,sheetFactor:0.44}}; }
+function applySeed(d){
+  d.orders = d.orders.filter(o=>!String(o.id).startsWith("seed"));
+  (SEED_DATA.orders||[]).forEach(o=> d.orders.push(JSON.parse(JSON.stringify(o))));
+  (SEED_DATA.transports||[]).forEach(t=>{ if(t && !d.transports.includes(t)) d.transports.push(t); });
+  d.transports.sort();
+}
+function loadDB(){
+  let d=null;
+  try{
+    const s = localStorage.getItem(KEY);
+    if(s){
+      d = JSON.parse(s);
+      d.orders = d.orders||[];
+      d.crimp = d.crimp&&d.crimp.length?d.crimp:DEFAULT_CRIMP.slice();
+      d.weave = d.weave&&d.weave.length?d.weave:DEFAULT_WEAVE.slice();
+      d.products = d.products&&d.products.length?d.products:DEFAULT_PRODUCTS.slice();
+      d.transports = d.transports||[];
+      d.settings = d.settings||{wastagePct:0,sheetFactor:0.44};
+      if(d.settings.wastagePct==null) d.settings.wastagePct=0;
+      if(!d.settings.sheetFactor) d.settings.sheetFactor=0.44;
+      d.stockIn = d.stockIn||[];
+      d.stockOut = d.stockOut||[];
+      d.stockScrap = d.stockScrap||[];
+    }
+  }catch(e){}
+  if(!d) d=baseDB();
+  return ensureSeed(d);
+}
+function ensureSeed(d){
+  try{
+    if(typeof SEED_DATA!=="undefined" && localStorage.getItem(SEEDKEY)!=="done"){
+      applySeed(d);
+      localStorage.setItem(SEEDKEY,"done");
+      localStorage.setItem(KEY, JSON.stringify(d));
+    }
+    d.stockIn=d.stockIn||[]; d.stockOut=d.stockOut||[]; d.stockScrap=d.stockScrap||[];
+    (d.orders||[]).forEach(o=>(o.items||[]).forEach(it=>{
+      if(it.madeQty===undefined) it.madeQty=(it.made||it.dispatched)?num(it.pcs):0;
+    }));
+    if(typeof STOCK_SEED!=="undefined" && localStorage.getItem(STOCKKEY)!=="done"){
+      STOCK_SEED.forEach(s=>{ if(!d.stockIn.some(x=>x.id===s.id)) d.stockIn.push(JSON.parse(JSON.stringify(s))); });
+      localStorage.setItem(STOCKKEY,"done");
+      localStorage.setItem(KEY, JSON.stringify(d));
+    }
+  }catch(e){}
+  return d;
+}
+let db = loadDB();
+function saveDB(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+
+function toast(m){
+  const t=document.getElementById("toast");
+  t.textContent=m; t.classList.remove("hidden");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.add("hidden"),2400);
+}
+
+/* ---------- item status helpers ---------- */
+function madeOf(it){
+  if(it.madeQty!==undefined && it.madeQty!==null) return num(it.madeQty);
+  return (it.made||it.dispatched)?num(it.pcs):0;
+}
+function itemStatus(it){
+  if(it.dispatched) return "Dispatched";
+  const md=madeOf(it), pc=num(it.pcs);
+  if(pc>0 && md>=pc) return "Ready";
+  if(md>0) return "In Production";
+  if(it.crimpM || it.weaveM) return "In Production";
+  return "Pending";
+}
+function readyQty(o){ return (o.items||[]).reduce((s,it)=>s+(!it.dispatched?madeOf(it):0),0); }
+function toMakeQty(o){ return (o.items||[]).reduce((s,it)=>s+(!it.dispatched?Math.max(0,num(it.pcs)-madeOf(it)):0),0); }
+function orderStatus(o){
+  const sts = o.items.map(itemStatus);
+  if(sts.length && sts.every(s=>s==="Dispatched")) return "Dispatched";
+  if(sts.length && sts.every(s=>s==="Ready"||s==="Dispatched")) return "Ready";
+  if(sts.some(s=>s==="In Production"||s==="Ready")) return "In Production";
+  return "Pending";
+}
+function statusBadge(s){
+  const cls = s==="Pending"?"b-pending":s==="In Production"?"b-prod":s==="Ready"?"b-ready":"b-disp";
+  return `<span class="badge ${cls}">${esc(s)}</span>`;
+}
+function specOf(it){ return `${num(it.opening)} × ${num(it.dia)}`; }
+function qtyText(it){ return `${num(it.pcs)} ${it.unit||"NOS"}`; }
+function areaSqftOf(it){ return (num(it.length)/1000)*(num(it.width)/1000)*10.764; }
+function wireKgPerPc(it){
+  const op=num(it.opening),dia=num(it.dia);
+  if(!op||!dia||!num(it.length)||!num(it.width)) return 0;
+  return (25.4/(op+dia))*dia*dia*0.04542*areaSqftOf(it);
+}
+function sheetKgPerPc(it){
+  const mm=num(it.sheetMM); if(mm<=0) return 0;
+  const f=(db.settings&&num(db.settings.sheetFactor))?num(db.settings.sheetFactor):0.44;
+  return areaSqftOf(it)*mm*f;
+}
+function weightBreakup(it){
+  const wire=wireKgPerPc(it), sheet=sheetKgPerPc(it);
+  const wpct=(db.settings&&db.settings.wastagePct!=null)?num(db.settings.wastagePct):0;
+  const base=wire+sheet, waste=base*wpct/100, perPc=base+waste;
+  return { wire:round2(wire), sheet:round2(sheet), waste:round2(waste), perPc:round2(perPc), total:round2(perPc*num(it.pcs)) };
+}
+function expectedKg(it){ return weightBreakup(it).total; }
+function wireCodeOf(product){
+  const p=(product||"").toUpperCase();
+  if(p.includes("SPRING")||p.includes("SPST")) return "SPST";
+  if(p.includes("HIGH CARBON")||p.includes("H.T")||p.includes("HT WIRE")) return "H.T WIRE";
+  if(p.includes("304L")) return "SS304L";
+  if(p.includes("304")) return "SS304";
+  if(p.includes("316")) return "SS316";
+  if(p.includes("314")) return "SS314";
+  if(p.includes("310")) return "SS310";
+  if(p.includes("GI")) return "GI";
+  if(p.includes("GP")||p.includes("PERFORATED")||p.includes("SHEET")) return "GP SHEET";
+  if(p.includes(" MS")||p.startsWith("MS")||p.includes("MILD")) return "MS";
+  return "";
+}
+// wire kg consumed by a made/dispatched item (actual minus sheet, else calculated wire)
+function wireUsedKg(it){
+  if(it.dispatched){
+    const sheet=round2(sheetKgPerPc(it)*num(it.pcs));
+    const actual=num(it.weight);
+    if(actual>0) return Math.max(0, round2(actual-sheet));
+    return round2(wireKgPerPc(it)*num(it.pcs));
+  }
+  const md=madeOf(it);
+  if(md>0) return round2(wireKgPerPc(it)*md);
+  return 0;
+}
+function stockKey(code,dia){ return (code||"?")+" | "+num(dia); }
+function computeStock(){
+  const map={};
+  const get=(code,dia)=>{ const k=stockKey(code,dia); return map[k]||(map[k]={code:code||"?",dia:num(dia),inQty:0,usedAuto:0,usedManual:0,scrap:0}); };
+  (db.stockIn||[]).forEach(s=>{ get(s.wireCode,s.dia).inQty+=num(s.qty); });
+  db.orders.forEach(o=>o.items.forEach(it=>{
+    const w=wireUsedKg(it); if(w<=0) return;
+    const code=wireCodeOf(it.product);
+    if(!code||!num(it.dia)) return;
+    get(code,it.dia).usedAuto+=w;
+  }));
+  (db.stockOut||[]).forEach(s=>{ get(s.wireCode,s.dia).usedManual+=num(s.qty); });
+  (db.stockScrap||[]).forEach(s=>{ get(s.wireCode,s.dia).scrap+=num(s.qty); });
+  return Object.values(map).map(r=>({...r, balance: round2(r.inQty-r.usedAuto-r.usedManual-r.scrap), inQty:round2(r.inQty), usedAuto:round2(r.usedAuto), usedManual:round2(r.usedManual), scrap:round2(r.scrap)}));
+}
+function payBadge(p){
+  if(!p) return "";
+  const cls = p==="Received"?"b-ready":p==="Advance"?"b-prod":"b-pending";
+  return `<span class="badge ${cls}">💰 ${esc(p)}</span>`;
+}
+function pendingAmt(o){ return Math.max(0, round2(num(o.amount)-num(o.paidAmount))); }
+function sizeOf(it){
+  const L=num(it.length),W=num(it.width);
+  return (L||W)?`${L} × ${W} mm`:"";
+}
+
+/* ---------- tabs ---------- */
+function showTab(id,btn){
+  document.querySelectorAll(".tab-page").forEach(p=>p.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  btn.classList.add("active");
+  renderAll();
+}
+
+/* ---------- order modal ---------- */
+function machineOptions(list,selected){
+  return `<option value="">— choose —</option>`+list.map(c=>`<option value="${esc(c)}"${c===selected?" selected":""}>${esc(c)}</option>`).join("");
+}
+function itemRowHTML(it={}){
+  const rid = it._rid || uid();
+  return `<div class="item-line" data-rid="${rid}">
+    <div class="full"><label>Product / Material *</label><input class="mini-inp it-product" list="productData" placeholder="Spring Steel Wire Mesh / SS 304 Wire Mesh" value="${it.product?esc(it.product):""}"></div>
+    <div><label>Opening MM</label><input class="mini-inp it-opening" type="number" step="0.01" placeholder="22" value="${it.opening??""}"></div>
+    <div><label>Wire Dia MM</label><input class="mini-inp it-dia" type="number" step="0.01" placeholder="8" value="${it.dia??""}"></div>
+    <div><label>Length MM</label><input class="mini-inp it-length" type="number" step="0.01" placeholder="1780" value="${it.length??""}"></div>
+    <div><label>Width MM</label><input class="mini-inp it-width" type="number" step="0.01" placeholder="1550" value="${it.width??""}"></div>
+    <div><label>Sheet mm <span style="font-weight:400">(agar ho)</span></label><input class="mini-inp it-sheet" type="number" step="0.01" min="0" placeholder="1.2 / blank" value="${it.sheetMM||""}"></div>
+    <div><label>Clamp Side <span style="font-weight:400">(manual likho)</span></label><input class="mini-inp it-clamp" list="clampData" placeholder="e.g. 1550 mm side / Width Side" value="${it.clamp?esc(it.clamp):""}"></div>
+    <div><label>Qty *</label><input class="mini-inp it-pcs" type="number" step="0.01" min="0" placeholder="6" value="${it.pcs??""}"></div>
+    <div><label>Unit</label>
+      <select class="mini-inp it-unit">
+        ${["NOS","ROLL","KG","MTR","SET","PC"].map(u=>`<option ${u===(it.unit||"NOS")?"selected":""}>${u}</option>`).join("")}
+      </select>
+    </div>
+    <div class="full" style="text-align:right"><button class="danger small" type="button" onclick="this.closest('.item-line').remove()">🗑️ Item hatao</button></div>
+  </div>`;
+}
+function addItemRow(it){
+  document.getElementById("itemRows").insertAdjacentHTML("beforeend", itemRowHTML(it||{}));
+}
+function openOrderModal(){
+  document.getElementById("editOrderId").value="";
+  document.getElementById("orderModalTitle").textContent="Naya Order";
+  document.getElementById("oParty").value="";
+  document.getElementById("oOrderNo").value=nextOrderNo();
+  document.getElementById("oPhone").value="";
+  document.getElementById("oDate").value=today();
+  document.getElementById("oEmail").value="";
+  document.getElementById("oPoRef").value="";
+  document.getElementById("oNote").value="";
+  document.getElementById("itemRows").innerHTML="";
+  addItemRow();
+  document.getElementById("orderModal").classList.remove("hidden");
+}
+function editOrder(id){
+  const o = db.orders.find(x=>x.id===id); if(!o) return;
+  document.getElementById("editOrderId").value=o.id;
+  document.getElementById("orderModalTitle").textContent="Order Edit";
+  document.getElementById("oParty").value=o.party||"";
+  document.getElementById("oOrderNo").value=o.orderNo||"";
+  document.getElementById("oPhone").value=o.phone||"";
+  document.getElementById("oDate").value=o.date||today();
+  document.getElementById("oEmail").value=o.email||"";
+  document.getElementById("oPoRef").value=o.poRef||"";
+  document.getElementById("oNote").value=o.note||"";
+  document.getElementById("itemRows").innerHTML="";
+  (o.items||[]).forEach(it=>addItemRow(it));
+  if(!o.items||!o.items.length) addItemRow();
+  document.getElementById("orderModal").classList.remove("hidden");
+}
+function closeOrderModal(){ document.getElementById("orderModal").classList.add("hidden"); }
+
+function saveOrder(){
+  const party = document.getElementById("oParty").value.trim();
+  if(!party){ toast("Party ka naam likho."); return; }
+  const id = document.getElementById("editOrderId").value || uid();
+  const existing = db.orders.find(x=>x.id===id);
+
+  const items = [];
+  document.querySelectorAll("#itemRows .item-line").forEach(row=>{
+    const pcs = num(row.querySelector(".it-pcs").value);
+    const opening = num(row.querySelector(".it-opening").value);
+    const dia = num(row.querySelector(".it-dia").value);
+    const product = row.querySelector(".it-product").value.trim();
+    if(!pcs && !opening && !dia && !product) return; // skip empty row
+    const rid = row.getAttribute("data-rid");
+    const prev = existing && existing.items ? existing.items.find(p=>p.id===rid) : null;
+    items.push({
+      id: rid,
+      product,
+      opening, dia,
+      length: num(row.querySelector(".it-length").value),
+      width: num(row.querySelector(".it-width").value),
+      clamp: row.querySelector(".it-clamp").value,
+      pcs,
+      unit: row.querySelector(".it-unit").value,
+      sheetMM: num(row.querySelector(".it-sheet").value),
+      crimpM: prev?prev.crimpM:"",
+      weaveM: prev?prev.weaveM:"",
+      made: prev?prev.made:false,
+      madeQty: prev?num(prev.madeQty):0,
+      weight: prev?prev.weight:0,
+      dispatched: prev?prev.dispatched:false
+    });
+  });
+  if(!items.length){ toast("Kam se kam ek item add karo."); return; }
+
+  const obj = {
+    id,
+    orderNo: (document.getElementById("oOrderNo").value.trim()) || (existing?existing.orderNo:nextOrderNo()),
+    poRef: document.getElementById("oPoRef").value.trim(),
+    party,
+    phone: document.getElementById("oPhone").value.trim(),
+    email: document.getElementById("oEmail").value.trim(),
+    date: document.getElementById("oDate").value || today(),
+    note: document.getElementById("oNote").value.trim(),
+    invoiceNo: existing?existing.invoiceNo||"":"",
+    invoiceDate: existing?existing.invoiceDate||"":"",
+    amount: existing?existing.amount||0:0,
+    payStatus: existing?existing.payStatus||"":"",
+    transport: existing?existing.transport||"":"",
+    bilty: existing?existing.bilty||"":"",
+    bookingStation: existing?existing.bookingStation||"":"",
+    packages: existing?existing.packages||"":"",
+    dispatchDate: existing?existing.dispatchDate||"":"",
+    received: existing?existing.received||false:false,
+    receivedDate: existing?existing.receivedDate||"":"",
+    items,
+    updatedAt: new Date().toISOString()
+  };
+  const idx = db.orders.findIndex(x=>x.id===id);
+  if(idx>=0) db.orders[idx]=obj; else db.orders.push(obj);
+  saveDB(); closeOrderModal(); renderAll();
+  toast(existing?"Order update ho gaya.":"Naya order save ho gaya.");
+}
+function nextOrderNo(){
+  const max = db.orders.reduce((m,o)=>Math.max(m, parseInt((o.orderNo||"ORD-0").split("-")[1])||0),0);
+  return "ORD-"+String(max+1).padStart(3,"0");
+}
+function orderAckLines(o){
+  const items=o.items.map((it,i)=>{
+    const p=[]; if(it.product)p.push(it.product);
+    if(num(it.opening)&&num(it.dia))p.push(specOf(it));
+    if(sizeOf(it))p.push(sizeOf(it));
+    if(it.clamp)p.push(it.clamp);
+    p.push(qtyText(it));
+    return `${i+1}. ${p.join(" - ")}`;
+  });
+  return [`Order No.: ${o.orderNo||"-"}`,`Date: ${o.date||"-"}`,``,`Items:`,...items];
+}
+function sendOrderAckWA(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  const body=[`*HMB Engineering*`,`Dear ${o.party},`,``,`Thank you for your order. Confirming aapka order:`,``,...orderAckLines(o),``,`Production aur dispatch ki update aapko milti rahegi. 🙏`].join("\n");
+  const text=encodeURIComponent(body);
+  let phone=(o.phone||"").replace(/\D/g,""); if(phone.length===10) phone="91"+phone;
+  window.open(phone?`https://wa.me/${phone}?text=${text}`:`https://wa.me/?text=${text}`,"_blank");
+}
+function sendOrderAckMail(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  const body=[`Dear Sir/Madam,`,``,`Thank you for your order. We confirm receipt of the following:`,``,...orderAckLines(o),``,`We will keep you updated on production and dispatch.`,``,`Regards,`,`HMB Engineering`].join("\n");
+  const subject=`Order Confirmation - ${o.party} - ${o.orderNo||""}`;
+  window.location.href=`mailto:${encodeURIComponent(o.email||"")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function deleteOrder(id){
+  if(!confirm("Ye poora order delete karna hai?")) return;
+  db.orders = db.orders.filter(x=>x.id!==id);
+  saveDB(); renderAll(); toast("Order delete ho gaya.");
+}
+function clearAllOrders(){
+  if(!confirm("Saare orders (May data samet) delete ho jayenge. Pehle Backup le liya? Continue?")) return;
+  db.orders=[]; saveDB(); renderAll(); toast("Sab orders delete. Fresh start.");
+}
+function loadMayData(){
+  if(typeof SEED_DATA==="undefined"){ toast("May data file me nahi mila."); return; }
+  applySeed(db);
+  try{ localStorage.setItem(SEEDKEY,"done"); }catch(e){}
+  saveDB(); renderAll();
+  toast("May data (spec ke saath) load ho gaya.");
+}
+
+/* ---------- item updates from production view ---------- */
+function findItem(orderId,itemId){
+  const o = db.orders.find(x=>x.id===orderId); if(!o) return [null,null];
+  const it = o.items.find(x=>x.id===itemId); return [o,it];
+}
+function setItemField(orderId,itemId,field,val){
+  const [o,it]=findItem(orderId,itemId); if(!it) return;
+  if(field==="weight"||field==="pcs") it[field]=num(val); else it[field]=val;
+  o.updatedAt=new Date().toISOString();
+  saveDB(); renderStats(); renderProduction(); renderDispatch();
+}
+function setItemMade(orderId,itemId,qty){
+  const [o,it]=findItem(orderId,itemId); if(!it) return;
+  let q=num(qty); if(q<0)q=0; if(q>num(it.pcs))q=num(it.pcs);
+  it.madeQty=q; it.made=(q>=num(it.pcs)&&num(it.pcs)>0);
+  o.updatedAt=new Date().toISOString();
+  saveDB(); renderStats(); renderProduction(); renderDispatch(); renderOrders();
+}
+function setOrderField(orderId,field,val){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o[field]=(field==="amount"||field==="paidAmount")?num(val):val;
+  o.updatedAt=new Date().toISOString();
+  saveDB(); renderStats(); renderPayment(); renderLedger(); renderDispatch();
+}
+
+/* ---------- dispatch ---------- */
+function setTransport(orderId,val){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o.transport=val.trim();
+  if(o.transport && !db.transports.includes(o.transport)){
+    db.transports.push(o.transport); db.transports.sort();
+  }
+  saveDB(); refreshTransportData(); renderSetup();
+}
+function setBilty(orderId,val){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o.bilty=val.trim(); saveDB();
+}
+function setDispDate(orderId,val){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o.dispatchDate=val; saveDB();
+}
+function markDispatched(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  if(!o.transport){ toast("Pehle transport ka naam likho."); return; }
+  let anyDisp=false, partial=false;
+  const plan=o.items.map(it=>{
+    const inp=document.getElementById("dq_"+o.id+"_"+it.id);
+    const rdy=madeOf(it);
+    let dq=inp?num(inp.value):rdy;
+    if(dq<0)dq=0; if(dq>rdy)dq=rdy;
+    if(dq>0) anyDisp=true;
+    if(dq<num(it.pcs)) partial=true;
+    return {it,dq};
+  });
+  if(!anyDisp){ toast("Dispatch Qty daalo (ready qty me se)."); return; }
+  if(!partial){
+    o.items.forEach(it=>{ it.dispatched=true; it.made=true; it.madeQty=num(it.pcs); });
+    if(!o.dispatchDate) o.dispatchDate=today();
+    saveDB(); renderAll(); toast(o.party+" dispatch ho gaya."); return;
+  }
+  // PART dispatch: split into dispatched order + balance order
+  const dispItems=[], remItems=[];
+  plan.forEach(({it,dq})=>{
+    if(dq>0) dispItems.push({...JSON.parse(JSON.stringify(it)), id:uid(), pcs:dq, madeQty:dq, made:true, dispatched:true});
+    const rem=round2(num(it.pcs)-dq);
+    if(rem>0){
+      const remMade=Math.max(0, round2(madeOf(it)-dq));
+      remItems.push({...JSON.parse(JSON.stringify(it)), pcs:rem, madeQty:remMade, made:(remMade>=rem&&rem>0), weight:0, dispatched:false});
+    }
+  });
+  if(!dispItems.length){ toast("Dispatch Qty daalo."); return; }
+  const dispOrder=JSON.parse(JSON.stringify(o));
+  dispOrder.id=uid(); dispOrder.items=dispItems;
+  dispOrder.note=(o.note?o.note+" ":"")+"(part dispatch)";
+  if(!dispOrder.dispatchDate) dispOrder.dispatchDate=today();
+  db.orders.push(dispOrder);
+  o.items=remItems;
+  o.invoiceNo=""; o.invoiceDate=""; o.bilty=""; o.packages=""; o.bookingStation=""; o.dispatchDate=""; o.received=false; o.receivedDate=""; o.amount=0; o.payStatus="";
+  saveDB(); renderAll();
+  toast(o.party+" — part dispatch ho gaya. Baaki qty Dispatch/Production me hai.");
+}
+function undoDispatch(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o.items.forEach(it=>it.dispatched=false); o.dispatchDate="";
+  saveDB(); renderAll(); toast("Dispatch undo ho gaya.");
+}
+function markReceived(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o.received=true; o.receivedDate=today();
+  saveDB(); renderAll(); toast(o.party+" ne material le liya (Received).");
+}
+function unsetReceived(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o.received=false; o.receivedDate="";
+  saveDB(); renderAll();
+}
+function waMessage(o){
+  const pkgs=o.packages||`${o.items.reduce((s,it)=>s+num(it.pcs),0)} NOS`;
+  let lines = [`*HMB Engineering*`, `Dear ${o.party},`, ``, `Aapka material successfully dispatch ho gaya hai as per confirmed order.`, ``, `*Shipment Details:*`];
+  if(o.invoiceNo) lines.push(`Invoice No.: ${o.invoiceNo}`);
+  if(o.invoiceDate) lines.push(`Invoice Date: ${fmtDate(o.invoiceDate)}`);
+  lines.push(`Order No.: ${o.orderNo||"-"}`);
+  if(o.transport) lines.push(`Transporter: ${o.transport}`);
+  if(o.bookingStation) lines.push(`Booking Station: ${o.bookingStation}`);
+  if(o.bilty) lines.push(`LR / GR No.: ${o.bilty}`);
+  lines.push(`No. of Packages: ${pkgs}`);
+  let totW=0; o.items.forEach(it=>totW+=num(it.weight));
+  if(totW>0) lines.push(`Total Weight: ${round2(totW)} kg`);
+  if(num(o.amount)>0) lines.push(`Total Invoice Amount: ₹${Math.round(num(o.amount)).toLocaleString("en-IN")}`);
+  lines.push(``, `Thank you for your continued trust and business with us. 🙏`);
+  return lines.join("\n");
+}
+function dispatchMailBody(o){
+  const pkgs=o.packages||`${o.items.reduce((s,it)=>s+num(it.pcs),0)} NOS`;
+  const amt=num(o.amount)>0?`₹${Math.round(num(o.amount)).toLocaleString("en-IN")}.00`:"-";
+  return [
+    `Dear Sir/Madam,`,``,
+    `We are pleased to inform you that your material has been successfully dispatched as per the confirmed order.`,
+    `Please find the digitally signed invoice attached for your reference and records.`,``,
+    `Shipment Details:`,
+    `Invoice No.      : ${o.invoiceNo||"-"}`,
+    `Invoice Date     : ${fmtDate(o.invoiceDate)||"-"}`,
+    `Order No.        : ${o.orderNo||"-"}`,
+    `Transporter Name : ${o.transport||"-"}`,
+    `Booking Station  : ${o.bookingStation||"-"}`,
+    `LR / GR No.      : ${o.bilty||"-"}`,
+    `No. of Packages  : ${pkgs}`,
+    `Total Invoice Amount : ${amt}`,``,
+    `If you need any further information or documentation, feel free to contact us.`,
+    `Thank you for your continued trust and business with us.`,``,
+    `Regards,`,`HMB Engineering`
+  ].join("\n");
+}
+function sendWhatsApp(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  const text = encodeURIComponent(waMessage(o));
+  let phone = (o.phone||"").replace(/\D/g,"");
+  if(phone.length===10) phone="91"+phone;
+  const url = phone ? `https://wa.me/${phone}?text=${text}` : `https://wa.me/?text=${text}`;
+  window.open(url,"_blank");
+}
+function sendMail(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  const subject=`Material Dispatched - ${o.party} - Invoice ${o.invoiceNo||o.orderNo||""}`;
+  const url=`mailto:${encodeURIComponent(o.email||"")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(dispatchMailBody(o))}`;
+  window.location.href=url;
+}
+
+/* ---------- render: orders ---------- */
+function renderOrders(){
+  const q=(document.getElementById("ordSearch").value||"").toLowerCase();
+  const st=document.getElementById("ordStatus").value;
+  const pay=document.getElementById("ordPay")?document.getElementById("ordPay").value:"";
+  const rows = db.orders
+    .filter(o=> orderStatus(o)!=="Dispatched" && readyQty(o)===0)
+    .filter(o=>{
+      const hay=[o.party,o.orderNo,o.invoiceNo||"",o.poRef||"",...(o.items||[]).map(i=>i.product||""),...(o.items||[]).map(specOf),...(o.items||[]).map(sizeOf)].join(" ").toLowerCase();
+      return (!q||hay.includes(q)) && (!st||orderStatus(o)===st) && (!pay||o.payStatus===pay);
+    })
+    .sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.updatedAt||"").localeCompare(a.updatedAt||""));
+  const box=document.getElementById("orderList");
+  if(!rows.length){ box.innerHTML=`<div class="card muted">Koi pending order nahi. Naya order <b>➕</b> se add karo. (Dispatch ho chuke orders <b>Party Ledger</b> me hain.)</div>`; return; }
+  box.innerHTML = rows.map(o=>{
+    const st=orderStatus(o);
+    const totPcs=o.items.reduce((s,it)=>s+num(it.pcs),0);
+    const totW=o.items.reduce((s,it)=>s+num(it.weight),0);
+    const chips=o.items.map(it=>{
+      const s=itemStatus(it);
+      const w=num(it.weight)>0?` • ${num(it.weight)}kg`:"";
+      const prod=it.product?esc(it.product)+" • ":"";
+      const spc=num(it.opening)&&num(it.dia)?`<b>${esc(specOf(it))}</b> `:"";
+      return `<span class="item-chip">${prod}${spc}${sizeOf(it)?"• "+esc(sizeOf(it))+" ":""}• ${esc(qtyText(it))}${w} ${statusBadge(s)}</span>`;
+    }).join("");
+    const accent = st==="Dispatched"?"#9ca3af":st==="Ready"?"var(--ok)":st==="In Production"?"var(--blue)":"var(--warn)";
+    return `<div class="order-card" style="border-left:5px solid ${accent}">
+      <div class="order-top">
+        <div>
+          <div class="order-party">${esc(o.party)} ${statusBadge(st)} ${payBadge(o.payStatus)}</div>
+          <div class="order-meta">${o.invoiceNo?"🧾 "+esc(o.invoiceNo)+" • ":""}${esc(o.orderNo)} • ${esc(o.date||"")} ${o.phone?"• 📞 "+esc(o.phone):""} • ${totW>0?(Math.round(totW*100)/100)+" kg":totPcs+" nos"}${o.amount>0?" • ₹"+Math.round(o.amount).toLocaleString("en-IN"):""}</div>
+        </div>
+        <div class="no-print" style="display:flex;gap:6px">
+          <button class="icon wa" onclick="sendOrderAckWA('${o.id}')" title="Order confirmation WhatsApp">🟢</button>
+          <button class="icon mail" onclick="sendOrderAckMail('${o.id}')" title="Order confirmation Mail">✉️</button>
+          <button class="icon" onclick="editOrder('${o.id}')">✏️</button>
+          <button class="icon" onclick="deleteOrder('${o.id}')">🗑️</button>
+        </div>
+      </div>
+      <div style="margin-top:6px">${chips}</div>
+      ${o.poRef?`<div class="order-meta" style="margin-top:6px">📋 ${esc(o.poRef)}</div>`:""}
+      ${o.dueDate?`<div class="order-meta" style="margin-top:2px">⏳ Due: ${esc(o.dueDate)}</div>`:""}
+      ${o.note&&o.note!=="May data (import)"?`<div class="order-meta" style="margin-top:4px">📝 ${esc(o.note)}</div>`:""}
+      ${o.transport?`<div class="order-meta" style="margin-top:4px">🚚 ${esc(o.transport)}${o.bilty?" • "+esc(o.bilty):""}${o.dispatchDate?" • "+esc(o.dispatchDate):""}</div>`:""}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- render: production (opening-wise) ---------- */
+function renderProduction(){
+  const filter=document.getElementById("prodFilter").value;
+  // flatten items
+  const flat=[];
+  db.orders.forEach(o=>{
+    o.items.forEach(it=>{
+      if(it.dispatched) return;
+      const needsMake = num(it.madeQty) < num(it.pcs);
+      if(filter==="pending" && !needsMake) return;
+      flat.push({o,it,s:itemStatus(it)});
+    });
+  });
+  // group by spec
+  const groups={};
+  flat.forEach(r=>{
+    const it=r.it;
+    const key=(num(it.opening)&&num(it.dia))?specOf(it):(it.product||"Other");
+    (groups[key]=groups[key]||[]).push(r);
+  });
+  const box=document.getElementById("productionGroups");
+  const keys=Object.keys(groups).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  if(!keys.length){ box.innerHTML=`<div class="card muted">Production ke liye koi item nahi. ${filter==="pending"?"Sab ban gaye ya order nahi hai.":""}</div>`; return; }
+
+  const crimpOpts=db.crimp, weaveOpts=db.weave;
+  box.innerHTML = keys.map(key=>{
+    const rows=groups[key];
+    const totPcs=rows.reduce((s,r)=>s+num(r.it.pcs),0);
+    const made=rows.reduce((s,r)=>s+num(r.it.madeQty),0);
+    const baaki=totPcs-made;
+    const expSum=round2(rows.reduce((s,r)=>s+expectedKg(r.it),0));
+    const body = rows.map(r=>{
+      const {o,it}=r;
+      const b=weightBreakup(it);
+      const brk=(b.sheet>0||b.waste>0)?`<br><span class="muted" style="font-size:10px">wire ${b.wire}${b.sheet>0?" + sheet "+b.sheet:""}${b.waste>0?" + w "+b.waste:""} /pc</span>`:"";
+      return `<tr>
+        <td><b>${esc(o.party)}</b><br><span class="muted">${esc(o.orderNo)}</span></td>
+        <td>${it.product?esc(it.product):"<span class='muted'>-</span>"}</td>
+        <td>${sizeOf(it)?esc(sizeOf(it)):"<span class='muted'>-</span>"}<br><span class="muted">${esc(it.clamp||"")}${num(it.sheetMM)>0?" • sheet "+num(it.sheetMM)+"mm":""}</span></td>
+        <td class="right"><b>${num(it.pcs)}</b> <span class="muted">${esc(it.unit||"NOS")}</span></td>
+        <td><select class="mini-inp" onchange="setItemField('${o.id}','${it.id}','crimpM',this.value)">${machineOptions(crimpOpts,it.crimpM)}</select></td>
+        <td><select class="mini-inp" onchange="setItemField('${o.id}','${it.id}','weaveM',this.value)">${machineOptions(weaveOpts,it.weaveM)}</select></td>
+        <td class="right"><b>${b.total>0?b.total+" kg":"-"}</b>${brk}</td>
+        <td><input class="mini-inp" type="number" min="0" max="${num(it.pcs)}" step="1" value="${madeOf(it)}" style="max-width:54px" title="kitne pc ban gaye" onchange="setItemMade('${o.id}','${it.id}',this.value)"> <span class="muted">/ ${num(it.pcs)}</span> <button class="small primary" onclick="setItemMade('${o.id}','${it.id}',${num(it.pcs)})">All</button></td>
+        <td>${statusBadge(itemStatus(it))}</td>
+      </tr>`;
+    }).join("");
+    return `<div class="group-head">
+        <div class="g-spec">${esc(key)} <small>(opening × dia)</small></div>
+        <div class="group-total">Total banana hai: ${baaki} pc${made>0?` &nbsp;|&nbsp; ban gaye: ${made}`:""} &nbsp;(order ${totPcs})${expSum>0?` &nbsp;|&nbsp; approx ${expSum} kg`:""}</div>
+      </div>
+      <div class="table-wrap" style="max-height:none">
+        <table>
+          <thead><tr>
+            <th>Party</th><th>Product</th><th>Size / Clamp</th><th class="right">Pcs</th>
+            <th>Crimp M/c</th><th>Weaving M/c</th><th class="right">Calculated kg</th><th>Ban gaya?</th><th>Status</th>
+          </tr></thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>`;
+  }).join("");
+}
+
+/* ---------- render: dispatch ---------- */
+function renderDispatch(){
+  refreshTransportData();
+  const rows = db.orders.filter(o=> readyQty(o)>0)
+    .sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const box=document.getElementById("dispatchList");
+  if(!rows.length){ box.innerHTML=`<div class="card muted">Abhi dispatch ke liye koi ready order nahi. (Production me item "ban gaya" mark karne par order yahan aayega.)</div>`; return; }
+  box.innerHTML = rows.map(o=>{
+    const st=orderStatus(o);
+    const dispatched = st==="Dispatched";
+    const totCalc=round2(o.items.reduce((s,it)=>s+expectedKg(it),0));
+    const totAct=round2(o.items.reduce((s,it)=>s+num(it.weight),0));
+    const readyItems=o.items.filter(it=>!it.dispatched && madeOf(it)>0);
+    const notReadyCount=o.items.filter(it=>!it.dispatched && madeOf(it)<=0).length;
+    const itemRows=readyItems.map(it=>{
+      const exp=round2(expectedKg(it));
+      const act=num(it.weight);
+      const diff=round2(act-exp);
+      const diffStyle=(act>0&&Math.abs(diff)>=0.5)?"color:var(--danger);font-weight:800":"color:var(--muted)";
+      return `<tr>
+        <td>${it.product?esc(it.product)+"<br>":""}${num(it.opening)&&num(it.dia)?"<b>"+esc(specOf(it))+"</b> ":""}<span class="muted">${esc(sizeOf(it))}</span></td>
+        <td class="right">${num(it.pcs)} ${esc(it.unit||"NOS")}<br><span class="muted" style="font-size:10px">ready ${madeOf(it)}</span></td>
+        <td><input id="dq_${o.id}_${it.id}" class="mini-inp" type="number" min="0" max="${madeOf(it)}" step="1" value="${madeOf(it)}" style="max-width:66px" title="Half dena ho to qty kam karo"></td>
+        <td class="right muted">${exp>0?exp+" kg":"-"}</td>
+        <td><input class="mini-inp" type="number" step="0.01" min="0" placeholder="actual" value="${it.weight||""}" style="max-width:88px" onchange="setItemField('${o.id}','${it.id}','weight',this.value)"></td>
+        <td class="right" style="${diffStyle}">${act>0?((diff>=0?"+":"")+diff):"-"}</td>
+      </tr>`;
+    }).join("");
+    return `<div class="order-card" style="border-left:5px solid ${dispatched?'#9ca3af':'var(--ok)'}">
+      <div class="order-top">
+        <div>
+          <div class="order-party">${esc(o.party)} ${statusBadge(st)} ${payBadge(o.payStatus)}</div>
+          <div class="order-meta">${esc(o.orderNo)} • ${esc(o.date||"")} ${o.phone?"• 📞 "+esc(o.phone):""}${o.email?" • ✉️ "+esc(o.email):""}</div>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:none;margin-top:8px">
+        <table><thead><tr><th>Item</th><th class="right">Order Qty</th><th>Dispatch Qty</th><th class="right">Calc</th><th>Actual kg</th><th class="right">Fark</th></tr></thead>
+        <tbody>${itemRows}</tbody>
+        <tfoot><tr><td colspan="3" class="right"><b>Total</b></td><td class="right muted">${totCalc} kg</td><td><b>${totAct} kg</b></td><td></td></tr></tfoot>
+        </table>
+      </div>
+      <div class="footer-note" style="margin-top:4px">Half dispatch: upar <b>Dispatch Qty</b> me kam qty likho (jaise 10 me se 5). Dispatch karte hi baaki qty apne aap wapas Dispatch list me aa jayegi.${notReadyCount>0?` <span style="color:var(--warn);font-weight:700">⚠️ Is order ke ${notReadyCount} item abhi ready nahi hain (Production me hain) — isliye yahan nahi dikh rahe.</span>`:""}</div>
+      <div class="form-grid" style="margin-top:10px">
+        <div><label>Invoice No</label><input value="${esc(o.invoiceNo||"")}" placeholder="HMB/302" onchange="setOrderField('${o.id}','invoiceNo',this.value)"></div>
+        <div><label>Invoice Date</label><input type="date" value="${esc(o.invoiceDate||"")}" onchange="setOrderField('${o.id}','invoiceDate',this.value)"></div>
+        <div><label>Payment Terms</label>
+          <select onchange="setOrderField('${o.id}','payStatus',this.value)">
+            ${["","Advance","Within 15 Days","Within 30 Days","Received"].map(p=>`<option value="${p}"${p===(o.payStatus||"")?" selected":""}>${p||"—"}</option>`).join("")}
+          </select>
+        </div>
+        <div><label>Total Invoice Amount ₹</label><input type="number" step="0.01" value="${o.amount||""}" placeholder="0" onchange="setOrderField('${o.id}','amount',this.value)"></div>
+        <div><label>Amount Received ₹ (part payment)</label><input type="number" step="0.01" value="${o.paidAmount||""}" placeholder="0" onchange="setOrderField('${o.id}','paidAmount',this.value)"></div>
+        <div><label class="muted" style="font-weight:600">Pending ₹</label><div style="padding:10px 0;font-weight:800;color:${pendingAmt(o)>0?'var(--danger)':'var(--ok)'}">₹${Math.round(pendingAmt(o)).toLocaleString("en-IN")}</div></div>
+        <div class="span2">
+          <label>Transporter</label>
+          <input list="transportData" value="${esc(o.transport||"")}" placeholder="type karo ya saved list se chuno" onchange="setTransport('${o.id}',this.value)">
+        </div>
+        <div><label>Booking Station</label><input value="${esc(o.bookingStation||"")}" placeholder="HOSANGABAD (TO PAY)" onchange="setOrderField('${o.id}','bookingStation',this.value)"></div>
+        <div><label>LR / GR No</label><input value="${esc(o.bilty||"")}" placeholder="908091" onchange="setBilty('${o.id}',this.value)"></div>
+        <div><label>No. of Packages</label><input value="${esc(o.packages||"")}" placeholder="4 NOS" onchange="setOrderField('${o.id}','packages',this.value)"></div>
+        <div><label>Dispatch Date</label><input type="date" value="${esc(o.dispatchDate||"")}" onchange="setDispDate('${o.id}',this.value)"></div>
+      </div>
+      <div class="actions-row" style="margin-top:10px">
+        <button class="wa" onclick="sendWhatsApp('${o.id}')">🟢 WhatsApp</button>
+        <button class="mail" onclick="sendMail('${o.id}')">✉️ Mail</button>
+        ${dispatched
+          ? `<button class="ghost" onclick="undoDispatch('${o.id}')">↩️ Undo dispatch</button>`
+          : `<button class="primary" onclick="markDispatched('${o.id}')">✅ Dispatched mark karo</button>`}
+      </div>
+      ${dispatched?`<div class="actions-row" style="margin-top:8px;border-top:1px dashed var(--line);padding-top:9px;align-items:center">
+        <span style="font-weight:800;font-size:13px">📦 Material party ko mila?</span>
+        ${o.received
+          ? `<span class="badge b-ready">✅ Mil gaya${o.receivedDate?" • "+esc(o.receivedDate):""}</span><button class="ghost small" onclick="unsetReceived('${o.id}')">Undo</button>`
+          : `<span class="badge b-pending">🚚 Raaste me (3-8 din)</span><button class="primary small" onclick="markReceived('${o.id}')">Mil gaya mark karo</button>`}
+      </div>`:""}
+    </div>`;
+  }).join("");
+}
+function refreshTransportData(){
+  document.getElementById("transportData").innerHTML = db.transports.map(t=>`<option value="${esc(t)}">`).join("");
+}
+function refreshPartyData(){
+  const set=[...new Set(db.orders.map(o=>o.party).filter(Boolean))].sort();
+  const el=document.getElementById("partyData");
+  if(el) el.innerHTML=set.map(p=>`<option value="${esc(p)}">`).join("");
+}
+
+/* ---------- payment follow-up ---------- */
+function waPaymentMessage(o){
+  const due=dueDateOf(o);
+  const lines=[`*HMB Engineering*`,`Namaste ${o.party} ji 🙏`,``,`Aapke order ka payment abhi pending hai, kripya dekh lijiye:`];
+  if(o.invoiceNo) lines.push(`Invoice: ${o.invoiceNo}`);
+  if(o.invoiceDate) lines.push(`Invoice Date: ${fmtDate(o.invoiceDate)}`);
+  if(num(o.amount)>0) lines.push(`Amount: ₹${Math.round(num(o.amount)).toLocaleString("en-IN")}`);
+  if(o.payStatus) lines.push(`Terms: ${o.payStatus}`);
+  if(due) lines.push(`Due Date: ${fmtDate(due)}`);
+  lines.push(``,`Payment jaldi karne ki kripa karein. Dhanyavaad 🙏`);
+  return lines.join("\n");
+}
+function sendPaymentWA(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  const text=encodeURIComponent(waPaymentMessage(o));
+  let phone=(o.phone||"").replace(/\D/g,""); if(phone.length===10) phone="91"+phone;
+  window.open(phone?`https://wa.me/${phone}?text=${text}`:`https://wa.me/?text=${text}`,"_blank");
+}
+function sendPaymentMail(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  const due=dueDateOf(o);
+  const body=[
+    `Dear Sir/Madam,`,``,
+    `This is a gentle reminder regarding the pending payment for the following invoice:`,``,
+    `Invoice No.      : ${o.invoiceNo||"-"}`,
+    `Invoice Date     : ${fmtDate(o.invoiceDate)||"-"}`,
+    `Order No.        : ${o.orderNo||"-"}`,
+    `Payment Terms    : ${o.payStatus||"-"}`,
+    due?`Due Date         : ${fmtDate(due)}`:"",
+    `Amount           : ${num(o.amount)>0?"₹"+Math.round(num(o.amount)).toLocaleString("en-IN")+".00":"-"}`,``,
+    `Kindly arrange the payment at the earliest. Please ignore if already paid.`,
+    `Thank you for your continued trust and business with us.`,``,
+    `Regards,`,`HMB Engineering`
+  ].filter(Boolean).join("\n");
+  const subject=`Payment Reminder - ${o.party} - Invoice ${o.invoiceNo||o.orderNo||""}`;
+  window.location.href=`mailto:${encodeURIComponent(o.email||"")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function renderPayment(){
+  const f=document.getElementById("payFilter").value;
+  const q=(document.getElementById("paySearch").value||"").toLowerCase();
+  const t=today();
+  let rows=db.orders.filter(o=>{
+    const st=o.payStatus||"";
+    const due=dueDateOf(o);
+    const pend=pendingAmt(o);
+    if(f!=="all" && pend<=0) return false;
+    if(f==="pending") return true;
+    if(f==="15") return st==="Within 15 Days";
+    if(f==="30") return st==="Within 30 Days";
+    if(f==="advance") return st==="Advance";
+    if(f==="overdue") return due && due<t;
+    return true;
+  }).filter(o=>!q||(o.party||"").toLowerCase().includes(q));
+  rows.sort((a,b)=>(dueDateOf(a)||"9999").localeCompare(dueDateOf(b)||"9999"));
+  const box=document.getElementById("paymentList");
+  if(!rows.length){ box.innerHTML=`<div class="card muted">Is filter me koi pending payment nahi. 🎉</div>`; return; }
+  const totPend=rows.reduce((s,o)=>s+pendingAmt(o),0);
+  const banner=`<div class="pay-banner"><div>💰 ${rows.length} party • pending payment</div><div class="b-amt">₹${Math.round(totPend).toLocaleString("en-IN")}</div></div>`;
+  box.innerHTML = banner + rows.map(o=>{
+    const due=dueDateOf(o);
+    const pend=pendingAmt(o);
+    const overdue=pend>0&&due&&due<t;
+    const cls=overdue?"overdue":(o.payStatus==="Advance"?"advance":"");
+    const items=o.items.map(it=>`<span class="item-chip">${it.product?esc(it.product)+" • ":""}${num(it.opening)&&num(it.dia)?esc(specOf(it))+" • ":""}${esc(qtyText(it))}</span>`).join("");
+    const paidNote = num(o.paidAmount)>0 ? `<div class="order-meta" style="margin-top:2px">Received so far: ₹${Math.round(num(o.paidAmount)).toLocaleString("en-IN")} (part payment)</div>` : "";
+    return `<div class="pay-card ${cls}">
+      <div class="order-top">
+        <div>
+          <div class="order-party">${esc(o.party)} ${payBadge(o.payStatus)} ${overdue?`<span class="pill-over">⚠️ OVERDUE</span>`:""}</div>
+          <div class="order-meta">${o.invoiceNo?"🧾 "+esc(o.invoiceNo)+" • ":""}${esc(o.invoiceDate||o.date||"")}${due?" • ⏳ Due "+esc(due):""}${o.phone?" • 📞 "+esc(o.phone):""}</div>
+          ${paidNote}
+        </div>
+        <div class="right">
+          <div class="pay-amt">₹${Math.round(pend).toLocaleString("en-IN")}<span class="muted" style="font-size:11px;font-weight:600"> pending</span></div>
+          <div class="muted" style="font-size:11px">of ₹${Math.round(num(o.amount)).toLocaleString("en-IN")}</div>
+        </div>
+      </div>
+      <div style="margin-top:6px">${items}</div>
+      ${o.poRef?`<div class="order-meta" style="margin-top:6px">📋 ${esc(o.poRef)}</div>`:""}
+      <div class="form-grid" style="margin-top:8px">
+        <div><label>Total Amount ₹</label><input type="number" step="0.01" value="${o.amount||""}" onchange="setOrderField('${o.id}','amount',this.value)"></div>
+        <div><label>Received so far ₹ (part payment daalo)</label><input type="number" step="0.01" value="${o.paidAmount||""}" placeholder="0" onchange="setOrderField('${o.id}','paidAmount',this.value)"></div>
+      </div>
+      <div class="actions-row">
+        <button class="wa" onclick="sendPaymentWA('${o.id}')">💰 Reminder WhatsApp</button>
+        <button class="mail" onclick="sendPaymentMail('${o.id}')">✉️ Reminder Mail</button>
+        <button class="ghost small" onclick="sendWhatsApp('${o.id}')">🚚 Dispatch detail</button>
+        <button class="small primary" onclick="markPaid('${o.id}')">✅ Poora payment mil gaya</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function markPaid(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o) return;
+  o.payStatus="Received"; o.paidAmount=num(o.amount);
+  saveDB(); renderAll(); toast(o.party+" payment Received mark ho gaya.");
+}
+
+/* ---------- wire stock ---------- */
+function openStockForm(type){
+  document.getElementById("stockForm").classList.remove("hidden");
+  document.getElementById("stockFormType").value=type;
+  document.getElementById("stockFormTitle").textContent = type==="in"?"➕ Stock In (Purchase)":(type==="scrap"?"🗑️ Scrap Entry":"➖ Manual Out (Bikri / Other)");
+  document.getElementById("sfPartyLabel").textContent = type==="in"?"Supplier / Party":"Party / Note";
+  document.getElementById("sfDate").value=today();
+  document.getElementById("sfCode").value="";
+  document.getElementById("sfDia").value="";
+  document.getElementById("sfQty").value="";
+  document.getElementById("sfParty").value="";
+  document.getElementById("sfBill").value="";
+  document.getElementById("sfDia").focus();
+}
+function closeStockForm(){ document.getElementById("stockForm").classList.add("hidden"); }
+function saveStockMove(){
+  const type=document.getElementById("stockFormType").value;
+  const code=document.getElementById("sfCode").value.trim().toUpperCase();
+  const dia=num(document.getElementById("sfDia").value);
+  const qty=num(document.getElementById("sfQty").value);
+  if(!code||!qty){ toast("Wire code aur qty daalo."); return; }
+  const rec={id:uid(),date:document.getElementById("sfDate").value||today(),wireCode:code,dia,qty,
+             party:document.getElementById("sfParty").value.trim(),bill:document.getElementById("sfBill").value.trim()};
+  if(type==="in"){ rec.opening=false; db.stockIn.push(rec); }
+  else if(type==="scrap"){ db.stockScrap.push(rec); }
+  else db.stockOut.push(rec);
+  saveDB(); closeStockForm(); renderStock();
+  toast(type==="in"?"Stock in add ho gaya.":(type==="scrap"?"Scrap add ho gaya.":"Manual out add ho gaya."));
+}
+function removeStockMove(kind,id){
+  if(!confirm("Ye entry delete karni hai?")) return;
+  if(kind==="in") db.stockIn=db.stockIn.filter(x=>x.id!==id);
+  else if(kind==="scrap") db.stockScrap=db.stockScrap.filter(x=>x.id!==id);
+  else db.stockOut=db.stockOut.filter(x=>x.id!==id);
+  saveDB(); renderStock(); toast("Entry delete ho gayi.");
+}
+function editStockQty(kind,id,val){
+  const arr = kind==="in"?db.stockIn:(kind==="scrap"?db.stockScrap:db.stockOut);
+  const rec=arr.find(x=>x.id===id); if(!rec) return;
+  rec.qty=num(val); saveDB(); renderStock();
+}
+function renderStock(){
+  const q=(document.getElementById("stockSearch").value||"").toUpperCase();
+  let rows=computeStock().filter(r=>!q||r.code.toUpperCase().includes(q));
+  rows.sort((a,b)=> a.code.localeCompare(b.code) || a.dia-b.dia);
+  const box=document.getElementById("stockBody");
+  const totIn=round2(rows.reduce((s,r)=>s+r.inQty,0));
+  const totUsed=round2(rows.reduce((s,r)=>s+r.usedAuto+r.usedManual,0));
+  const totBal=round2(rows.reduce((s,r)=>s+r.balance,0));
+  const stat=`<div class="stat-bar" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="stat gold"><div class="s-label">Total Purchase (kg)</div><div class="s-val">${totIn.toLocaleString("en-IN")}</div></div>
+    <div class="stat blue"><div class="s-label">Total Used (kg)</div><div class="s-val">${totUsed.toLocaleString("en-IN")}</div></div>
+    <div class="stat green"><div class="s-label">Balance Stock (kg)</div><div class="s-val">${totBal.toLocaleString("en-IN")}</div></div>
+  </div>`;
+  if(!rows.length){ box.innerHTML=stat+`<div class="card muted">Koi stock nahi. "Stock In" se add karo.</div>`; }
+  else{
+    // group by code
+    const byCode={};
+    rows.forEach(r=>{(byCode[r.code]=byCode[r.code]||[]).push(r);});
+    const codes=Object.keys(byCode).sort();
+    const tables=codes.map(code=>{
+      const list=byCode[code];
+      const cIn=round2(list.reduce((s,r)=>s+r.inQty,0));
+      const cBal=round2(list.reduce((s,r)=>s+r.balance,0));
+      const body=list.map(r=>{
+        const used=round2(r.usedAuto+r.usedManual);
+        const low=r.balance<=0?"color:var(--danger);font-weight:800":(r.balance<200?"color:var(--warn);font-weight:800":"font-weight:800");
+        return `<tr>
+          <td class="right">${r.dia} mm</td>
+          <td class="right">${r.inQty.toLocaleString("en-IN")}</td>
+          <td class="right muted">${used.toLocaleString("en-IN")}${r.usedManual>0?` <span style="font-size:10px">(auto ${r.usedAuto}+man ${r.usedManual})</span>`:""}</td>
+          <td class="right" style="${r.scrap>0?'color:var(--danger)':'color:var(--muted)'}">${r.scrap>0?r.scrap.toLocaleString("en-IN"):"-"}</td>
+          <td class="right" style="${low}">${r.balance.toLocaleString("en-IN")} kg${r.balance<=0?" ⚠️":""}</td>
+        </tr>`;
+      }).join("");
+      return `<div class="group-head"><div class="g-spec">${esc(code)}</div><div class="group-total">Balance: ${cBal.toLocaleString("en-IN")} kg &nbsp;(in ${cIn.toLocaleString("en-IN")})</div></div>
+        <div class="table-wrap" style="max-height:none"><table>
+          <thead><tr><th class="right">Dia</th><th class="right">In (kg)</th><th class="right">Used (kg)</th><th class="right">Scrap</th><th class="right">Balance</th></tr></thead>
+          <tbody>${body}</tbody></table></div>`;
+    }).join("");
+    box.innerHTML=stat+tables;
+  }
+  // recent movements
+  const typeFilter=document.getElementById("stockTypeFilter")?document.getElementById("stockTypeFilter").value:"";
+  const ins=(db.stockIn||[]).map(s=>({...s,kind:"in"}));
+  const outs=(db.stockOut||[]).map(s=>({...s,kind:"out"}));
+  const scr=(db.stockScrap||[]).map(s=>({...s,kind:"scrap"}));
+  let moves=ins.concat(outs).concat(scr).filter(s=>!q||(s.wireCode||"").toUpperCase().includes(q));
+  if(typeFilter==="opening") moves=moves.filter(s=>s.kind==="in"&&s.opening);
+  else if(typeFilter==="in") moves=moves.filter(s=>s.kind==="in"&&!s.opening);
+  else if(typeFilter==="out") moves=moves.filter(s=>s.kind==="out");
+  else if(typeFilter==="scrap") moves=moves.filter(s=>s.kind==="scrap");
+  moves.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const totalMoves=moves.length;
+  if(!typeFilter && !q) moves=moves.slice(0,80);
+  const mv=document.getElementById("stockMovesBox");
+  const filterLabel = typeFilter?esc(document.getElementById("stockTypeFilter").selectedOptions[0].text):(q?"("+esc(q)+")":"(recent 80 — filter se sab dekho)");
+  mv.innerHTML=`<div class="card"><h3>Stock Movements ${filterLabel} <span class="muted" style="font-size:13px;font-weight:600">— ${totalMoves} entries</span></h3>
+    <div class="footer-note" style="margin-bottom:6px">Qty par click karke <b>opening stock ya kisi bhi purchase ki qty edit</b> kar sakte ho (galti se zyada/kam likha ho to yahan se sudhaar lo). Scrap month me ek baar lump-sum daal do.</div>
+    <div class="table-wrap" style="max-height:60vh"><table>
+    <thead><tr><th>Date</th><th>Type</th><th>Wire</th><th class="right">Dia</th><th class="right">Qty (kg)</th><th>Party / Note</th><th></th></tr></thead>
+    <tbody>${moves.map(s=>`<tr${s.opening?' style="background:#fffbea"':''}>
+      <td>${esc(s.date||"")}</td>
+      <td>${s.kind==="in"?`<span class="badge b-ready">IN${s.opening?" (Opening)":""}</span>`:(s.kind==="scrap"?`<span class="badge" style="background:#fee2e2;color:#991b1b">SCRAP</span>`:`<span class="badge b-pending">OUT</span>`)}</td>
+      <td><b>${esc(s.wireCode||"")}</b></td>
+      <td class="right">${num(s.dia)} mm</td>
+      <td class="right"><input type="number" step="0.01" value="${num(s.qty)}" style="max-width:100px;text-align:right" onchange="editStockQty('${s.kind}','${s.id}',this.value)"></td>
+      <td>${esc(s.party||"")}${s.bill?" • "+esc(s.bill):""}</td>
+      <td class="right"><button class="icon" onclick="removeStockMove('${s.kind}','${s.id}')">🗑️</button></td>
+    </tr>`).join("")}</tbody></table></div>
+    <div class="footer-note">Wire mesh dispatch ka "used" balance me auto-minus hota hai (yahan movements me nahi dikhta). Yahan purchase (IN), manual OUT aur SCRAP entries hain.</div>
+  </div>`;
+}
+
+/* ---------- party ledger ---------- */
+function partyList(){ return [...new Set(db.orders.map(o=>o.party).filter(Boolean))].sort((a,b)=>a.localeCompare(b)); }
+function fillLedgerParties(){
+  const sel=document.getElementById("ledgerParty"); if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML=`<option value="">— Sab parties ki list —</option>`+partyList().map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join("");
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+function clearLedger(){ const s=document.getElementById("ledgerParty"); if(s) s.value=""; renderLedger(); }
+function openLedger(party){
+  const s=document.getElementById("ledgerParty"); if(!s) return;
+  s.value=party; renderLedger(); window.scrollTo({top:0,behavior:"smooth"});
+}
+function renderLedger(){
+  fillLedgerParties();
+  const party=document.getElementById("ledgerParty").value;
+  const body=document.getElementById("ledgerBody");
+  const waBtn=document.getElementById("ledgerWaBtn");
+  const backBtn=document.getElementById("ledgerBackBtn");
+  if(!party){
+    if(waBtn) waBtn.style.display="none";
+    if(backBtn) backBtn.style.display="none";
+    const g={};
+    db.orders.forEach(o=>{
+      const x=g[o.party]=g[o.party]||{party:o.party,orders:0,amount:0,pending:0,kg:0,last:""};
+      x.orders++; x.amount+=num(o.amount);
+      x.pending+=pendingAmt(o);
+      o.items.forEach(it=>x.kg+=num(it.weight));
+      if((o.date||"")>x.last) x.last=o.date||"";
+    });
+    const list=Object.values(g).sort((a,b)=>b.pending-a.pending||b.amount-a.amount);
+    if(!list.length){ body.innerHTML=`<div class="card muted">Abhi koi party nahi.</div>`; return; }
+    body.innerHTML=`<div class="card"><div class="muted" style="margin-bottom:8px;font-size:12.5px">Party ke naam par click karke poora statement dekho.</div><div class="table-wrap" style="max-height:70vh"><table>
+      <thead><tr><th>Party</th><th class="right">Orders</th><th class="right">Total ₹</th><th class="right">Pending ₹</th><th class="right">Weight</th><th>Last order</th></tr></thead>
+      <tbody>${list.map(x=>`<tr style="cursor:pointer" onclick="openLedger('${esc(x.party).replace(/'/g,"\\'")}')">
+        <td><b>${esc(x.party)}</b></td>
+        <td class="right">${x.orders}</td>
+        <td class="right">₹${Math.round(x.amount).toLocaleString("en-IN")}</td>
+        <td class="right" style="${x.pending>0?'color:var(--danger);font-weight:800':'color:var(--muted)'}">${x.pending>0?"₹"+Math.round(x.pending).toLocaleString("en-IN"):"—"}</td>
+        <td class="right">${Math.round(x.kg)} kg</td>
+        <td>${esc(x.last)}</td>
+      </tr>`).join("")}</tbody></table></div></div>`;
+    return;
+  }
+  if(waBtn) waBtn.style.display="";
+  if(backBtn) backBtn.style.display="";
+  const rows=db.orders.filter(o=>o.party===party).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const totAmt=rows.reduce((s,o)=>s+num(o.amount),0);
+  const pend=rows.reduce((s,o)=>s+pendingAmt(o),0);
+  const totKg=rows.reduce((s,o)=>s+o.items.reduce((a,it)=>a+num(it.weight),0),0);
+  const summary=`<div class="stat-bar" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="stat gold"><div class="s-label">Total Orders</div><div class="s-val">${rows.length}</div></div>
+    <div class="stat blue"><div class="s-label">Total Billed</div><div class="s-val">₹${Math.round(totAmt).toLocaleString("en-IN")}</div></div>
+    <div class="stat warn"><div class="s-label">Payment Pending</div><div class="s-val">₹${Math.round(pend).toLocaleString("en-IN")}</div></div>
+    <div class="stat green"><div class="s-label">Total Weight</div><div class="s-val">${Math.round(totKg)} kg</div></div>
+  </div>`;
+
+  function rowHTML(o){
+    const st=orderStatus(o);
+    const kg=o.items.reduce((a,it)=>a+num(it.weight),0);
+    const p=pendingAmt(o);
+    const items=o.items.map(it=>`${it.product?esc(it.product)+" ":""}${num(it.opening)&&num(it.dia)?esc(specOf(it))+" ":""}${esc(qtyText(it))}`).join("<br>");
+    return `<tr>
+      <td>${esc(o.date||"")}</td>
+      <td>${esc(o.invoiceNo||o.orderNo||"")}</td>
+      <td style="font-size:12px">${items}</td>
+      <td class="right">${Math.round(kg*100)/100} kg</td>
+      <td class="right">${num(o.amount)>0?"₹"+Math.round(num(o.amount)).toLocaleString("en-IN"):"-"}</td>
+      <td class="right" style="${p>0?'color:var(--danger);font-weight:800':'color:var(--muted)'}">${p>0?"₹"+Math.round(p).toLocaleString("en-IN"):"Paid"}</td>
+      <td>${payBadge(o.payStatus)||"-"}</td>
+      <td>${o.transport?esc(o.transport):"<span class='muted'>-</span>"}</td>
+      <td>${st==="Dispatched"
+            ? (o.received
+                ? `<button class="ghost small" onclick="unsetReceived('${o.id}')" title="undo">↺ Undo</button>`
+                : `<button class="primary small" onclick="markReceived('${o.id}')">📦 Mil gaya</button>`)
+            : "-"}</td>
+      <td>${st==="Dispatched"?`<button class="ghost small" onclick="undoDispatch('${o.id}')" title="Problem hai to wapas Dispatch me le jao">↩️ Wapas Dispatch</button>`:`<span class="muted" style="font-size:11px">${esc(st)}</span>`}</td>
+    </tr>`;
+  }
+  function groupTable(title, badgeColor, list){
+    if(!list.length) return "";
+    return `<div class="card"><h3 style="margin:0 0 8px">${title} <span class="muted" style="font-size:13px;font-weight:600">(${list.length})</span></h3>
+      <div class="table-wrap" style="max-height:50vh"><table>
+      <thead><tr><th>Date</th><th>Invoice</th><th>Items</th><th class="right">Weight</th><th class="right">Amount ₹</th><th class="right">Pending ₹</th><th>Payment</th><th>Transport</th><th>Material</th><th>Action</th></tr></thead>
+      <tbody>${list.map(rowHTML).join("")}</tbody></table></div></div>`;
+  }
+
+  const dispatched=rows.filter(o=>orderStatus(o)==="Dispatched");
+  const materialPending=dispatched.filter(o=>!o.received);
+  const materialReceived=dispatched.filter(o=>o.received);
+  const inProcess=rows.filter(o=>orderStatus(o)!=="Dispatched");
+
+  const table = groupTable("🚚 Material Pending (raaste me / mila nahi)", "warn", materialPending)
+              + groupTable("✅ Material Mil Gaya (party ko pahunch gaya)", "ok", materialReceived)
+              + groupTable("🏭 In Process (abhi dispatch nahi hua)", "blue", inProcess);
+  body.innerHTML=summary+(table||`<div class="card muted">Is party ka koi order nahi mila.</div>`);
+}
+function ledgerPaymentWA(){
+  const party=document.getElementById("ledgerParty").value; if(!party) return;
+  const pend=db.orders.filter(o=>o.party===party && pendingAmt(o)>0);
+  if(!pend.length){ toast("Is party ka koi pending payment nahi."); return; }
+  const tot=pend.reduce((s,o)=>s+pendingAmt(o),0);
+  const lines=[`*HMB Engineering*`,`Namaste ${party} ji 🙏`,``,`Aapke ye payment pending hain:`];
+  pend.forEach(o=>lines.push(`• ${o.invoiceNo||o.orderNo||""} (${o.date||""}) - ₹${Math.round(pendingAmt(o)).toLocaleString("en-IN")}${o.dueDate?" - due "+o.dueDate:""}`));
+  lines.push(``,`Total pending: ₹${Math.round(tot).toLocaleString("en-IN")}`,``,`Kripya payment karne ki kripa karein. Dhanyavaad 🙏`);
+  const text=encodeURIComponent(lines.join("\n"));
+  let phone=(pend[0].phone||"").replace(/\D/g,""); if(phone.length===10) phone="91"+phone;
+  window.open(phone?`https://wa.me/${phone}?text=${text}`:`https://wa.me/?text=${text}`,"_blank");
+}
+
+/* ---------- render: setup ---------- */
+function addMachine(kind){
+  const inpId = kind==="crimp"?"newCrimp":"newWeave";
+  const code = document.getElementById(inpId).value.trim().toUpperCase();
+  if(!code) return;
+  const arr = kind==="crimp"?db.crimp:db.weave;
+  if(arr.includes(code)){ toast("Ye machine pehle se hai."); return; }
+  arr.push(code); document.getElementById(inpId).value="";
+  saveDB(); renderSetup(); renderProduction(); toast("Machine add ho gayi.");
+}
+function removeMachine(kind,code){
+  if(kind==="crimp") db.crimp=db.crimp.filter(c=>c!==code);
+  else db.weave=db.weave.filter(c=>c!==code);
+  saveDB(); renderSetup(); renderProduction();
+}
+function removeTransport(t){
+  db.transports=db.transports.filter(x=>x!==t);
+  saveDB(); renderSetup(); refreshTransportData();
+}
+function addProduct(){
+  const v=document.getElementById("newProduct").value.trim();
+  if(!v) return;
+  if(db.products.includes(v)){ toast("Ye product pehle se hai."); return; }
+  db.products.push(v); document.getElementById("newProduct").value="";
+  saveDB(); renderSetup(); refreshProductData(); toast("Product add ho gaya.");
+}
+function removeProduct(p){
+  db.products=db.products.filter(x=>x!==p);
+  saveDB(); renderSetup(); refreshProductData();
+}
+function saveWeightSettings(){
+  db.settings=db.settings||{};
+  db.settings.wastagePct=num(document.getElementById("setWastage").value);
+  db.settings.sheetFactor=num(document.getElementById("setSheetF").value)||0.44;
+  saveDB(); renderStats(); renderProduction(); renderDispatch(); toast("Weight settings save ho gayi.");
+}
+function chip(text,ondel){
+  return `<span class="item-chip">${esc(text)} <button class="icon small" style="padding:2px 6px;margin-left:4px" onclick="${ondel}">✕</button></span>`;
+}
+function refreshProductData(){
+  const el=document.getElementById("productData");
+  if(el) el.innerHTML=(db.products||[]).map(p=>`<option value="${esc(p)}">`).join("");
+}
+function renderSetup(){
+  const ws=db.settings||{};
+  const a=document.getElementById("setWastage"); if(a) a.value=(ws.wastagePct!=null?ws.wastagePct:0);
+  const sf=document.getElementById("setSheetF"); if(sf) sf.value=(ws.sheetFactor!=null?ws.sheetFactor:0.44);
+  document.getElementById("productListSetup").innerHTML = (db.products||[]).map(p=>chip(p,`removeProduct('${p.replace(/'/g,"\\'")}')`)).join("")||`<span class="muted">Koi product nahi.</span>`;
+  document.getElementById("crimpList").innerHTML = db.crimp.map(c=>chip(c,`removeMachine('crimp','${c}')`)).join("")||`<span class="muted">Koi crimp machine nahi.</span>`;
+  document.getElementById("weaveList").innerHTML = db.weave.map(c=>chip(c,`removeMachine('weave','${c}')`)).join("")||`<span class="muted">Koi weaving machine nahi.</span>`;
+  document.getElementById("transportList").innerHTML = db.transports.length?db.transports.map(t=>chip(t,`removeTransport('${t.replace(/'/g,"\\'")}')`)).join(""):`<span class="muted">Abhi koi transport save nahi.</span>`;
+}
+
+/* ---------- stats ---------- */
+function renderStats(){
+  let pending=0, ready=0, disp=0;
+  db.orders.forEach(o=>o.items.forEach(it=>{
+    const s=itemStatus(it);
+    if(s==="Dispatched") disp+=num(it.pcs);
+    else if(s==="Ready") ready+=num(it.pcs);
+    else pending+=num(it.pcs);
+  }));
+  document.getElementById("stOrders").textContent=db.orders.length;
+  document.getElementById("stPending").textContent=pending;
+  document.getElementById("stReady").textContent=ready;
+  document.getElementById("stDisp").textContent=disp;
+  const payPending=db.orders.reduce((s,o)=>s+pendingAmt(o),0);
+  const pe=document.getElementById("stPay"); if(pe) pe.textContent="₹"+Math.round(payPending).toLocaleString("en-IN");
+}
+
+function renderAll(){
+  renderStats(); renderOrders(); renderProduction(); renderDispatch(); renderPayment(); renderLedger(); renderStock(); renderSetup(); refreshTransportData(); refreshPartyData(); refreshProductData();
+}
+
+/* ---------- export / import ---------- */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="HMB_Order_Dispatch_Backup.json"; a.click(); URL.revokeObjectURL(a.href);
+}
+function importJSON(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!Array.isArray(d.orders)) throw new Error("bad");
+      if(!confirm("Import karne se is device ka data replace ho jayega. Continue?")) return;
+      db=d; db.crimp=db.crimp||DEFAULT_CRIMP.slice(); db.weave=db.weave||DEFAULT_WEAVE.slice(); db.products=db.products&&db.products.length?db.products:DEFAULT_PRODUCTS.slice(); db.transports=db.transports||[]; db.settings=db.settings||{wastagePct:0,sheetFactor:0.44}; db.stockIn=db.stockIn||[]; db.stockOut=db.stockOut||[]; db.stockScrap=db.stockScrap||[];
+      (db.orders||[]).forEach(o=>(o.items||[]).forEach(it=>{ if(it.madeQty===undefined||it.madeQty===null) it.madeQty=(it.made||it.dispatched)?num(it.pcs):0; }));
+      saveDB(); renderAll(); toast("Backup import ho gaya.");
+    }catch(e){ alert("Ye sahi backup file nahi hai."); }
+  };
+  r.readAsText(f); ev.target.value="";
+}
+function exportCSV(){
+  const rows=[];
+  db.orders.forEach(o=>o.items.forEach(it=>{
+    rows.push({
+      InvoiceNo:o.invoiceNo||"", OrderNo:o.orderNo, Party:o.party, Phone:o.phone, Date:o.date, PORef:o.poRef||"",
+      Product:it.product, Opening:it.opening, Dia:it.dia, Length:it.length, Width:it.width, Clamp:it.clamp, SheetMM:it.sheetMM||"",
+      Qty:it.pcs, Unit:it.unit||"", CrimpMachine:it.crimpM, WeavingMachine:it.weaveM, WeightKg:it.weight,
+      Payment:o.payStatus||"", Amount:o.amount||"", DueDate:o.dueDate||"",
+      Status:itemStatus(it), Transport:o.transport, Bilty:o.bilty||"", DispatchDate:o.dispatchDate||"", Received:o.received?"Yes":"No", ReceivedDate:o.receivedDate||"", Note:o.note
+    });
+  }));
+  if(!rows.length){ toast("Export ke liye data nahi hai."); return; }
+  const h=Object.keys(rows[0]);
+  const csv=[h.join(",")].concat(rows.map(r=>h.map(k=>`"${String(r[k]??"").replaceAll('"','""')}"`).join(","))).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="HMB_Order_Dispatch.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---------- init ---------- */
+renderAll();
+</script>
+</body>
+</html>
